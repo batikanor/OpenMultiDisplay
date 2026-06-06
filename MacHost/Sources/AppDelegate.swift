@@ -126,14 +126,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         let port = Int(settings.port)
         Task.detached { [weak self] in
-            let devices = StatusDetector.usbDevices()
             let deviceInfos = StatusDetector.usbDeviceInfos()
             let reverseOK = StatusDetector.adbReverseConfigured(port: port)
             await MainActor.run { [weak self] in
                 guard let self = self else { return }
-                self.settings.usbDeviceConnected = !devices.isEmpty
+                self.settings.usbDeviceConnected = !deviceInfos.isEmpty
                 self.settings.usbDeviceInfos = deviceInfos
                 self.settings.adbReverseConfigured = reverseOK
+                self.reconcileUSBPipelines(withConnectedDevices: deviceInfos)
             }
         }
     }
@@ -591,6 +591,50 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         pipelineStats.removeAll()
     }
 
+    @MainActor
+    private func reconcileUSBPipelines(withConnectedDevices connectedDevices: [USBDeviceInfo]) {
+        guard settings.connectionMode == .usb,
+              settings.isRunning,
+              !displayPipelines.isEmpty else {
+            return
+        }
+
+        let reconciliation = USBPipelineReconciler.reconcile(
+            activeSerials: Array(displayPipelines.keys),
+            connectedSerials: connectedDevices.map(\.serial)
+        )
+
+        guard !reconciliation.disconnectedSerials.isEmpty else { return }
+
+        for serial in reconciliation.disconnectedSerials {
+            if let pipeline = displayPipelines.removeValue(forKey: serial) {
+                debugLog("USB device disconnected: \(serial); removing its virtual display")
+                pipeline.stop()
+            }
+            pipelineClientCounts.removeValue(forKey: serial)
+            pipelineStats.removeValue(forKey: serial)
+        }
+
+        settings.displayCreated = !displayPipelines.isEmpty
+        settings.clientConnected = pipelineClientCounts.values.contains { $0 > 0 }
+        refreshAggregatePipelineStats()
+
+        if reconciliation.allPipelinesDisconnected {
+            settings.isRunning = false
+            settings.captureMethod = "No USB displays connected"
+            debugLog("All USB display pipelines stopped after device disconnect")
+        }
+    }
+
+    @MainActor
+    private func refreshAggregatePipelineStats() {
+        let stats = Array(pipelineStats.values)
+        settings.currentFPS = stats.isEmpty
+            ? 0
+            : stats.map { $0.fps }.reduce(0, +) / Double(stats.count)
+        settings.currentBitrate = stats.map { $0.mbps }.reduce(0, +)
+    }
+
     private func startUSBPipelines() async {
         do {
             stopDisplayPipelines()
@@ -650,26 +694,23 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
                 pipeline.onClientCountChanged = { [weak self, serial] count in
                     DispatchQueue.main.async { [weak self, serial, count] in
-                        guard let self else { return }
+                        guard let self, self.displayPipelines[serial] != nil else { return }
                         self.pipelineClientCounts[serial] = count
                         self.settings.clientConnected = self.pipelineClientCounts.values.contains { $0 > 0 }
                     }
                 }
                 pipeline.onStats = { [weak self, serial] fps, mbps in
                     DispatchQueue.main.async { [weak self, serial, fps, mbps] in
-                        guard let self else { return }
+                        guard let self, self.displayPipelines[serial] != nil else { return }
                         self.pipelineStats[serial] = (fps: fps, mbps: mbps)
-                        let stats = Array(self.pipelineStats.values)
-                        self.settings.currentFPS = stats.isEmpty
-                            ? 0
-                            : stats.map { $0.fps }.reduce(0, +) / Double(stats.count)
-                        self.settings.currentBitrate = stats.map { $0.mbps }.reduce(0, +)
+                        self.refreshAggregatePipelineStats()
                     }
                 }
                 let displayName = spec.name
-                pipeline.onCaptureMethodChanged = { [weak self, displayName] method in
-                    DispatchQueue.main.async { [weak self, displayName, method] in
-                        self?.settings.captureMethod = "\(displayName): \(method)"
+                pipeline.onCaptureMethodChanged = { [weak self, serial, displayName] method in
+                    DispatchQueue.main.async { [weak self, serial, displayName, method] in
+                        guard let self, self.displayPipelines[serial] != nil else { return }
+                        self.settings.captureMethod = "\(displayName): \(method)"
                     }
                 }
                 pipeline.onTouchEvent = { [weak self] displayID, x, y, action, pointerCount, x2, y2 in
