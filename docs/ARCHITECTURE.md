@@ -1,6 +1,6 @@
 # Architecture
 
-TetherSpan currently uses the upstream SideScreen wire protocol while the public app identity, Swift package, and Android package namespace are branded as TetherSpan.
+OpenMultiDisplay currently uses the upstream SideScreen wire protocol while the public app identity, Swift package, and Android package namespace are branded as OpenMultiDisplay.
 
 ## Wireless / Single-Display Pipeline
 
@@ -47,7 +47,7 @@ Each `DisplayPipeline` owns:
 - ADB reverse mappings are per physical device, so multiple devices can use the same Android-side port.
 - macOS needs separate virtual displays for true extended-desktop behavior.
 - Touch input must map back to the owning virtual display, not a global display.
-- Per-device display profiles are keyed by ADB serial and loaded from `~/.tetherspan/devices.json`.
+- Per-device display profiles are keyed by ADB serial and loaded from `~/.openmultidisplay/devices.json`.
 
 ## Open Questions
 

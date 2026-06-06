@@ -2,7 +2,7 @@ import Foundation
 import VideoToolbox
 import CoreMedia
 
-/// Minimal H.265 encoder for testing - same config as TetherSpan's VideoEncoder
+/// Minimal H.265 encoder for testing - same config as OpenMultiDisplay's VideoEncoder
 class TestEncoder {
     private var session: VTCompressionSession?
     var onEncodedFrame: ((Data, Bool) -> Void)?  // data, isKeyframe
@@ -44,7 +44,7 @@ class TestEncoder {
 
         self.session = session
 
-        // Same settings as TetherSpan's VideoEncoder
+        // Same settings as OpenMultiDisplay's VideoEncoder
         VTSessionSetProperty(session, key: kVTCompressionPropertyKey_RealTime, value: kCFBooleanTrue)
         VTSessionSetProperty(session, key: kVTCompressionPropertyKey_ProfileLevel, value: kVTProfileLevel_HEVC_Main_AutoLevel)
         VTSessionSetProperty(session, key: kVTCompressionPropertyKey_AverageBitRate, value: (bitrateMbps * 1_000_000) as CFNumber)

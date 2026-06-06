@@ -10,9 +10,9 @@ setbuf(stderr, nil)
 // ============================================
 // Tests:
 //  1. Generate animated color bar test pattern
-//  2. Encode with H.265 (VideoToolbox) - same config as TetherSpan
+//  2. Encode with H.265 (VideoToolbox) - same config as OpenMultiDisplay
 //  3. Save raw bitstream to /tmp/streamtest.h265 (verify with ffplay)
-//  4. Stream via TCP to Android tablet (same protocol as TetherSpan)
+//  4. Stream via TCP to Android tablet (same protocol as OpenMultiDisplay)
 //
 // Usage:
 //   StreamTest              → encode + save H.265 file (no streaming)

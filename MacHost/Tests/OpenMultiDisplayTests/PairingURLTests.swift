@@ -1,11 +1,11 @@
 import XCTest
-@testable import TetherSpan
+@testable import OpenMultiDisplay
 
 final class PairingURLTests: XCTestCase {
     func testBuildContainsAllFields() {
         let token = Data((0..<32).map { UInt8($0) })
         let url = PairingURL.build(host: "192.168.1.42", port: 8888, token: token, name: "Dat's MacBook")
-        XCTAssertTrue(url.hasPrefix("tetherspan://192.168.1.42:8888?"))
+        XCTAssertTrue(url.hasPrefix("openmultidisplay://192.168.1.42:8888?"))
         XCTAssertTrue(url.contains("t="))
         XCTAssertTrue(url.contains("name="))
     }

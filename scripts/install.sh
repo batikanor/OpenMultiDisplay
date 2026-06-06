@@ -6,7 +6,7 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 cd "$ROOT_DIR"
 
-echo "Installing TetherSpan..."
+echo "Installing OpenMultiDisplay..."
 echo ""
 
 # Prefer Homebrew OpenJDK, then Android Studio's bundled JDK, then caller-provided JAVA_HOME.
@@ -47,14 +47,14 @@ echo "  ✓ macOS app built"
 
 # Create macOS .app bundle
 echo "📦 Creating macOS .app bundle..."
-APP_NAME="TetherSpan.app"
+APP_NAME="OpenMultiDisplay.app"
 APP_DIR="$APP_NAME/Contents"
 rm -rf "$APP_NAME"
 mkdir -p "$APP_DIR/MacOS"
 mkdir -p "$APP_DIR/Resources"
 
 # Copy executable
-cp MacHost/.build/release/TetherSpan "$APP_DIR/MacOS/TetherSpan"
+cp MacHost/.build/release/OpenMultiDisplay "$APP_DIR/MacOS/OpenMultiDisplay"
 
 # Create Info.plist
 cat > "$APP_DIR/Info.plist" << 'PLIST'
@@ -63,17 +63,17 @@ cat > "$APP_DIR/Info.plist" << 'PLIST'
 <plist version="1.0">
 <dict>
     <key>CFBundleName</key>
-    <string>TetherSpan</string>
+    <string>OpenMultiDisplay</string>
     <key>CFBundleDisplayName</key>
-    <string>TetherSpan</string>
+    <string>OpenMultiDisplay</string>
     <key>CFBundleIdentifier</key>
-    <string>com.batikanor.tetherspan</string>
+    <string>com.batikanor.openmultidisplay</string>
     <key>CFBundleVersion</key>
     <string>1.0</string>
     <key>CFBundleShortVersionString</key>
     <string>1.0</string>
     <key>CFBundleExecutable</key>
-    <string>TetherSpan</string>
+    <string>OpenMultiDisplay</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>LSMinimumSystemVersion</key>
@@ -138,9 +138,9 @@ echo "✅ Installation complete!"
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "To start streaming:"
-echo "  1. Start Mac app: open 'TetherSpan.app'"
-echo "     (or run: MacHost/.build/release/TetherSpan)"
-echo "  2. Open 'TetherSpan' app on Android"
+echo "  1. Start Mac app: open 'OpenMultiDisplay.app'"
+echo "     (or run: MacHost/.build/release/OpenMultiDisplay)"
+echo "  2. Open 'OpenMultiDisplay' app on Android"
 echo "  3. Tap Connect"
 echo ""
 echo "💡 Troubleshooting:"

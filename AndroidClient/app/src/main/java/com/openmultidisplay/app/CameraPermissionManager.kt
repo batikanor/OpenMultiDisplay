@@ -1,4 +1,4 @@
-package com.tetherspan.app
+package com.openmultidisplay.app
 
 import android.Manifest
 import android.app.Activity

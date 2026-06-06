@@ -480,7 +480,7 @@ class ScreenCapture {
         debugLog("CGDisplayStream fallback — display \(displayID) (\(width)x\(height))")
 
         let pixelFormat = Int32(kCVPixelFormatType_420YpCbCr8BiPlanarFullRange)
-        let queue = DispatchQueue(label: "com.tetherspan.cgdisplaystream", qos: .userInteractive)
+        let queue = DispatchQueue(label: "com.openmultidisplay.cgdisplaystream", qos: .userInteractive)
 
         guard let displayStream = CGDisplayStream(
             dispatchQueueDisplay: displayID,

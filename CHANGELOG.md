@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to TetherSpan will be documented in this file.
+All notable changes to OpenMultiDisplay will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
@@ -10,15 +10,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- New TetherSpan project identity, app bundle identifiers, package names, and release artifact names.
+- New OpenMultiDisplay project identity, app bundle identifiers, package names, and release artifact names.
 - Independent USB display pipelines for multiple Android receivers connected to the same Mac.
 - A USB Device Profiles editor in the macOS settings window for per-device resolution, refresh rate, bitrate, quality, HiDPI, rotation, and arrangement position.
 - macOS support matrix and development-system documentation in `docs/SUPPORT.md`.
 
 ### Changed
-- macOS and Android UI colors now use the TetherSpan teal/amber brand palette.
-- Wireless QR pairing uses the `tetherspan://` scheme in the new app.
-- Fork-specific config lives in `~/.tetherspan/devices.json`, with one-time migration from the legacy `.sidescreen-multi` path.
+- macOS and Android UI colors now use the OpenMultiDisplay teal/amber brand palette.
+- Wireless QR pairing uses the `openmultidisplay://` scheme in the new app.
+- Fork-specific config lives in `~/.openmultidisplay/devices.json`, with one-time migration from the legacy `.sidescreen-multi` path.
 
 ### Planned
 - mDNS auto-discovery for wireless mode
@@ -37,8 +37,8 @@ Hotfix for a "cursor trail" / ghost-cursor artifact visible on shaky WiFi (e.g. 
 - **Cursor trail / ghost cursors on WiFi jitter.** When a brief WiFi burst saturated MediaCodec's input pool on Android, the decoder kept receiving P-frames whose reference state had quietly diverged from the encoder's. The mismatch painted ghost cursors at old positions until the next scheduled keyframe arrived (~1 s later). The client now **force-requests a fresh keyframe** the moment the input pool exhausts, bypassing the 1 s / 500 ms / 500 ms throttle chain that was holding recovery back — the reference rebuilds in ~150 ms instead. The pipeline keeps feeding through the recovery so the cursor stays live (a brief trail is visible while the keyframe is in flight, then it clears). A new 200 ms throttle on forced requests prevents the host being keyframe-flooded under sustained congestion.
 
 ### Installation
-- **macOS**: 0.9.0 DMG works — no Mac changes in this release. Otherwise install `TetherSpan-0.9.1-mac-universal.dmg` and run `sudo xattr -cr /Applications/TetherSpan.app` if Gatekeeper complains.
-- **Android**: Install `TetherSpan-0.9.1-android.apk` (enable "Unknown sources" if needed).
+- **macOS**: 0.9.0 DMG works — no Mac changes in this release. Otherwise install `OpenMultiDisplay-0.9.1-mac-universal.dmg` and run `sudo xattr -cr /Applications/OpenMultiDisplay.app` if Gatekeeper complains.
+- **Android**: Install `OpenMultiDisplay-0.9.1-android.apk` (enable "Unknown sources" if needed).
 
 ---
 
@@ -60,8 +60,8 @@ Stream resilience pass — faster recovery after backgrounding/reconnect, less l
 - This release adds three new wire-protocol message types (`6` video-frame-with-metadata, `7` keyframe-request, `8` client-supports-metadata) but keeps the legacy type `0` path. Mixed pairs are safe: a new Android client + old Mac host falls back to legacy frames; a new Mac host + old Android client never sees the new types because the client doesn't advertise capability. Update both sides to get the recovery benefits.
 
 ### Installation
-- **macOS**: Open `TetherSpan-0.9.0-mac-universal.dmg`, drag TetherSpan to Applications. If Gatekeeper says "damaged"/"cannot be opened": `sudo xattr -cr /Applications/TetherSpan.app`
-- **Android**: Install `TetherSpan-0.9.0-android.apk` (enable "Unknown sources" if needed).
+- **macOS**: Open `OpenMultiDisplay-0.9.0-mac-universal.dmg`, drag OpenMultiDisplay to Applications. If Gatekeeper says "damaged"/"cannot be opened": `sudo xattr -cr /Applications/OpenMultiDisplay.app`
+- **Android**: Install `OpenMultiDisplay-0.9.0-android.apk` (enable "Unknown sources" if needed).
 
 ---
 
@@ -74,8 +74,8 @@ Small fix on top of the 0.8.0 wireless release. Wireless mode (QR pairing, auto-
 - **Info tooltips next to status rows now show their hint text.** Clicking the `ⓘ` icon next to a status row previously opened an empty horizontal bar instead of the explanation. Now it pops up the hint properly (e.g. what "ADB reverse" or "Listening on" actually mean).
 
 ### Installation
-- **macOS**: Open `TetherSpan-0.8.1-mac-universal.dmg`, drag TetherSpan to Applications. If Gatekeeper says "damaged"/"cannot be opened": `sudo xattr -cr /Applications/TetherSpan.app`
-- **Android**: APK from 0.8.0 still works — no Android changes in this release. Otherwise install `TetherSpan-0.8.1-android.apk` (enable "Unknown sources" if needed).
+- **macOS**: Open `OpenMultiDisplay-0.8.1-mac-universal.dmg`, drag OpenMultiDisplay to Applications. If Gatekeeper says "damaged"/"cannot be opened": `sudo xattr -cr /Applications/OpenMultiDisplay.app`
+- **Android**: APK from 0.8.0 still works — no Android changes in this release. Otherwise install `OpenMultiDisplay-0.8.1-android.apk` (enable "Unknown sources" if needed).
 
 ---
 
@@ -99,8 +99,8 @@ Wireless connection mode — Android client can now connect to the Mac host over
 - The token authorizing wireless connections is generated on first launch and stored locally — anyone with your Mac's QR can pair, so don't share it broadcast-style. "Reset Token" on Mac revokes all paired devices.
 
 ### Installation
-- **macOS**: Open `TetherSpan-0.8.0-mac-universal.dmg`, drag TetherSpan to Applications. If Gatekeeper says "damaged"/"cannot be opened": `sudo xattr -cr /Applications/TetherSpan.app`
-- **Android**: Install `TetherSpan-0.8.0-android.apk` (enable "Unknown sources" if needed). Wireless mode requires camera permission to scan the pairing QR.
+- **macOS**: Open `OpenMultiDisplay-0.8.0-mac-universal.dmg`, drag OpenMultiDisplay to Applications. If Gatekeeper says "damaged"/"cannot be opened": `sudo xattr -cr /Applications/OpenMultiDisplay.app`
+- **Android**: Install `OpenMultiDisplay-0.8.0-android.apk` (enable "Unknown sources" if needed). Wireless mode requires camera permission to scan the pairing QR.
 - **First wireless pairing**: open Side Screen on Mac → toggle to Wireless tab → scan the displayed QR with the Android app's Wireless tab.
 
 ---
@@ -111,11 +111,11 @@ Wireless connection mode — Android client can now connect to the Mac host over
 Hotfix — Mac app was being quarantined as malware by macOS XProtect on install.
 
 ### Fixed
-- **Mac app flagged as virus and auto-moved to Trash on 0.7.0**: the new "Reset Permission" helper from #8 spawned `tccutil reset ScreenCapture <bundle-id>` from inside the app. This is the exact pattern XProtect's YARA rules use to detect TCC-bypass malware (Atomic Stealer / Cthulhu Stealer family). Combined with the existing ad-hoc signature and `disable-library-validation` / `allow-unsigned-executable-memory` entitlements, the binary scored high enough to be quarantined automatically. The auto-reset feature has been removed; stale-TCC handling is back to 0.6.8 behavior — users who hit it after a reinstall need to remove the TetherSpan entry manually under System Settings → Privacy & Security → Screen Recording. All other 0.7.0 improvements (short-GOP encoding, instant decode handshake, default 60 Hz, touch parsing gate, Arrange Displays shortcut, decoder latency log) are preserved.
+- **Mac app flagged as virus and auto-moved to Trash on 0.7.0**: the new "Reset Permission" helper from #8 spawned `tccutil reset ScreenCapture <bundle-id>` from inside the app. This is the exact pattern XProtect's YARA rules use to detect TCC-bypass malware (Atomic Stealer / Cthulhu Stealer family). Combined with the existing ad-hoc signature and `disable-library-validation` / `allow-unsigned-executable-memory` entitlements, the binary scored high enough to be quarantined automatically. The auto-reset feature has been removed; stale-TCC handling is back to 0.6.8 behavior — users who hit it after a reinstall need to remove the OpenMultiDisplay entry manually under System Settings → Privacy & Security → Screen Recording. All other 0.7.0 improvements (short-GOP encoding, instant decode handshake, default 60 Hz, touch parsing gate, Arrange Displays shortcut, decoder latency log) are preserved.
 
 ### Installation
-- **macOS**: Open `TetherSpan-0.7.1-mac-universal.dmg`, drag TetherSpan to Applications. If Gatekeeper says "damaged" or "cannot be opened": `sudo xattr -cr /Applications/TetherSpan.app`
-- **Android**: Install `TetherSpan-0.7.1-android.apk` (enable "Unknown sources" if needed)
+- **macOS**: Open `OpenMultiDisplay-0.7.1-mac-universal.dmg`, drag OpenMultiDisplay to Applications. If Gatekeeper says "damaged" or "cannot be opened": `sudo xattr -cr /Applications/OpenMultiDisplay.app`
+- **Android**: Install `OpenMultiDisplay-0.7.1-android.apk` (enable "Unknown sources" if needed)
 - **If you installed 0.7.0 and the app was moved to Trash by macOS**: empty Trash first, then download 0.7.1 fresh — the 0.7.0 binary was rejected by XProtect, redownloading the same file won't help. After installing 0.7.1, run the `xattr -cr` command above.
 
 ---
@@ -126,7 +126,7 @@ Hotfix — Mac app was being quarantined as malware by macOS XProtect on install
 User-experience improvements (permission recovery, display arrangement) and pipeline performance work to reduce input lag on high-resolution tablets.
 
 ### Fixed
-- **Stuck Screen Recording permission after reinstall** (#8): when macOS holds onto a stale TCC entry from a previous TetherSpan install, `CGRequestScreenCaptureAccess()` no-ops silently and the user is locked out. The Status section now detects this state (preflight returns false despite a previous successful grant), surfaces a "Permission stuck" banner, and offers a one-click "Reset Permission" button that runs `tccutil reset ScreenCapture com.batikanor.tetherspan`. If the spawn fails, a fallback banner shows the exact command with a Copy button.
+- **Stuck Screen Recording permission after reinstall** (#8): when macOS holds onto a stale TCC entry from a previous OpenMultiDisplay install, `CGRequestScreenCaptureAccess()` no-ops silently and the user is locked out. The Status section now detects this state (preflight returns false despite a previous successful grant), surfaces a "Permission stuck" banner, and offers a one-click "Reset Permission" button that runs `tccutil reset ScreenCapture com.batikanor.openmultidisplay`. If the spawn fails, a fallback banner shows the exact command with a Copy button.
 - **Input lag on dynamic content / high-res tablets** (#13): the encoder previously used all-intra (every frame a keyframe), producing 3-5x more data per frame than necessary. This saturated tablet decode/compose pipelines at high panel resolutions and starved Mac WindowServer rendering when capturing fast-changing content. Switched to short-GOP IPP encoding (1 keyframe per second, P-frames in between), which keeps frame-loss recovery within 1 second over reliable USB-C TCP while dramatically lowering per-frame work end-to-end.
 - **Touch parsing wasted CPU when touch was disabled**: incoming touch frames from the client were parsed and dispatched to the main queue even when host-side touch control was off; only the `guard` in the handler discarded them. Touch frames now drop early without parsing or dispatch when `touchEnabled` is off; ping/pong continues unaffected.
 - **Slow first frame after client connects on idle screen**: with short-GOP encoding, a client connecting during a static screen would wait up to a full second for the next scheduled keyframe before its decoder could start. The host now forces an IDR keyframe the moment a client appears, replays the last cached pixel buffer if capture is currently idle, and drops orphan P-frames at the streaming server until that first keyframe is sent — so a fresh decoder always starts on a sync frame. (Cherry-picked from #15 — thanks to @luisdavim for the contribution and @busybox11 for testing.)
@@ -307,13 +307,13 @@ Each release follows this format:
 
 ---
 
-[Unreleased]: https://github.com/batikanor/TetherSpan/compare/0.6.8...HEAD
-[0.6.8]: https://github.com/batikanor/TetherSpan/compare/0.6.5...0.6.8
-[0.6.5]: https://github.com/batikanor/TetherSpan/compare/0.6.2...0.6.5
-[0.6.2]: https://github.com/batikanor/TetherSpan/compare/0.5.2...0.6.2
-[0.5.2]: https://github.com/batikanor/TetherSpan/compare/0.2.3...0.5.2
-[0.2.3]: https://github.com/batikanor/TetherSpan/compare/0.2.2...0.2.3
-[0.2.2]: https://github.com/batikanor/TetherSpan/compare/0.2.1...0.2.2
-[0.2.1]: https://github.com/batikanor/TetherSpan/compare/0.2.0...0.2.1
-[0.2.0]: https://github.com/batikanor/TetherSpan/compare/0.1.0...0.2.0
-[0.1.0]: https://github.com/batikanor/TetherSpan/releases/tag/0.1.0
+[Unreleased]: https://github.com/batikanor/OpenMultiDisplay/compare/0.6.8...HEAD
+[0.6.8]: https://github.com/batikanor/OpenMultiDisplay/compare/0.6.5...0.6.8
+[0.6.5]: https://github.com/batikanor/OpenMultiDisplay/compare/0.6.2...0.6.5
+[0.6.2]: https://github.com/batikanor/OpenMultiDisplay/compare/0.5.2...0.6.2
+[0.5.2]: https://github.com/batikanor/OpenMultiDisplay/compare/0.2.3...0.5.2
+[0.2.3]: https://github.com/batikanor/OpenMultiDisplay/compare/0.2.2...0.2.3
+[0.2.2]: https://github.com/batikanor/OpenMultiDisplay/compare/0.2.1...0.2.2
+[0.2.1]: https://github.com/batikanor/OpenMultiDisplay/compare/0.2.0...0.2.1
+[0.2.0]: https://github.com/batikanor/OpenMultiDisplay/compare/0.1.0...0.2.0
+[0.1.0]: https://github.com/batikanor/OpenMultiDisplay/releases/tag/0.1.0

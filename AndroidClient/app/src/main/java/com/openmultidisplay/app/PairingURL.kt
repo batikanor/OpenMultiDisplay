@@ -1,4 +1,4 @@
-package com.tetherspan.app
+package com.openmultidisplay.app
 
 import android.net.Uri
 import android.util.Base64
@@ -13,7 +13,7 @@ object PairingURL {
             } catch (e: Exception) {
                 return null
             }
-        if (uri.scheme != "tetherspan") return null
+        if (uri.scheme != "openmultidisplay") return null
         val host = uri.host ?: return null
         val port = uri.port.takeIf { it in 1..65535 } ?: return null
         val tokenB64 = uri.getQueryParameter("t") ?: return null

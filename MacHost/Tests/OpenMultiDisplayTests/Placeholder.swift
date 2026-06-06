@@ -1,5 +1,5 @@
 import XCTest
-@testable import TetherSpan
+@testable import OpenMultiDisplay
 
 final class PlaceholderTests: XCTestCase {
     func testPlaceholder() {

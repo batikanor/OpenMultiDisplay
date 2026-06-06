@@ -30,7 +30,7 @@ final class DisplayPipeline {
             height: spec.height,
             refreshRate: spec.refreshRate,
             hiDPI: spec.hiDPI,
-            name: "TetherSpan - \(spec.name)",
+            name: "OpenMultiDisplay - \(spec.name)",
             serialNumber: spec.virtualDisplaySerialNumber
         )
 

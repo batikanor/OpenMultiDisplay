@@ -1,4 +1,4 @@
-package com.tetherspan.app
+package com.openmultidisplay.app
 
 import android.media.MediaCodec
 import android.media.MediaCodecList

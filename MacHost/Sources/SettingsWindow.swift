@@ -118,7 +118,7 @@ struct SettingsView: View {
                     .onHover { headerHovered = $0 }
 
                     VStack(alignment: .leading, spacing: 3) {
-                        Text("TetherSpan")
+                        Text("OpenMultiDisplay")
                             .font(.system(size: 20, weight: .bold, design: .rounded))
                         Text("USB-tethered displays for Android devices")
                             .font(.system(size: 12, weight: .medium))
@@ -142,7 +142,7 @@ struct SettingsView: View {
                         Button("Cancel", role: .cancel) { }
                         Button("Reset", role: .destructive) {
                             settings.resetToDefaults()
-                            if let window = NSApp.windows.first(where: { $0.title == "TetherSpan" }) {
+                            if let window = NSApp.windows.first(where: { $0.title == "OpenMultiDisplay" }) {
                                 window.center()
                             }
                         }
@@ -848,7 +848,7 @@ struct SettingsView: View {
                                 }
                         }
                         .buttonStyle(.plain)
-                        .help("Quit TetherSpan (Command-Q)")
+                        .help("Quit OpenMultiDisplay (Command-Q)")
                     }
                     .padding(.horizontal, 20)
                     .padding(.vertical, 14)
@@ -1487,7 +1487,7 @@ struct DeviceProfileChip: View {
 @available(macOS 14.0, *)
 class DisplaySettings: ObservableObject {
     private let defaults = UserDefaults.standard
-    private let keyPrefix = "TetherSpan_"
+    private let keyPrefix = "OpenMultiDisplay_"
 
     @Published var resolution: String {
         didSet { save("resolution", resolution) }
@@ -1680,7 +1680,7 @@ class SettingsWindowController: NSWindowController, NSWindowDelegate {
             defer: false
         )
 
-        window.title = "TetherSpan"
+        window.title = "OpenMultiDisplay"
         window.titlebarAppearsTransparent = true
         window.backgroundColor = .windowBackgroundColor
         window.isMovableByWindowBackground = true
@@ -1790,7 +1790,7 @@ struct WirelessSection: View {
                     } else {
                         Text("Generating QR…").foregroundColor(.secondary)
                     }
-                    Text("Scan this QR from TetherSpan Android (Wireless tab)")
+                    Text("Scan this QR from OpenMultiDisplay Android (Wireless tab)")
                         .font(.system(size: 11))
                         .foregroundColor(.secondary)
                         .multilineTextAlignment(.center)

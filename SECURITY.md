@@ -1,6 +1,6 @@
 # Security Policy
 
-TetherSpan is early alpha software. Do not treat it as hardened or production audited.
+OpenMultiDisplay is early alpha software. Do not treat it as hardened or production audited.
 
 ## Supported Versions
 

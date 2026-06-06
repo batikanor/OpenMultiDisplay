@@ -2,18 +2,18 @@
 import PackageDescription
 
 let package = Package(
-    name: "TetherSpan",
+    name: "OpenMultiDisplay",
     platforms: [
         .macOS(.v14)  // Required for CGVirtualDisplay API
     ],
     products: [
         .executable(
-            name: "TetherSpan",
-            targets: ["TetherSpan"])
+            name: "OpenMultiDisplay",
+            targets: ["OpenMultiDisplay"])
     ],
     targets: [
         .executableTarget(
-            name: "TetherSpan",
+            name: "OpenMultiDisplay",
             dependencies: [],
             path: "Sources",
             cSettings: [
@@ -23,9 +23,9 @@ let package = Package(
                 .unsafeFlags(["-Xcc", "-fmodule-map-file=Sources/module.modulemap"])
             ]),
         .testTarget(
-            name: "TetherSpanTests",
-            dependencies: ["TetherSpan"],
-            path: "Tests/TetherSpanTests",
+            name: "OpenMultiDisplayTests",
+            dependencies: ["OpenMultiDisplay"],
+            path: "Tests/OpenMultiDisplayTests",
             cSettings: [
                 .unsafeFlags(["-I", "Sources"])
             ],

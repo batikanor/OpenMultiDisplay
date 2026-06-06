@@ -1,6 +1,6 @@
 # Contributing
 
-TetherSpan is an early fork of SideScreen. Contributions should keep the project focused on reliable Android receivers for macOS, especially USB-first multi-device workflows.
+OpenMultiDisplay is an early fork of SideScreen. Contributions should keep the project focused on reliable Android receivers for macOS, especially USB-first multi-device workflows.
 
 ## Development Setup
 
@@ -30,6 +30,7 @@ cd AndroidClient
 
 - Keep changes scoped and reviewable.
 - Preserve MIT license attribution for upstream SideScreen code.
+- Keep Batikan Orpava and m2moiz listed as fork contributors unless they ask to be removed.
 - Test on real Android hardware when changing USB, decoder, touch, or display behavior.
 - Document user-visible behavior changes in `README.md` or `docs/`.
 - Do not claim independent multi-display support until a per-device virtual-display pipeline is implemented and tested.

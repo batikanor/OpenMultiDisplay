@@ -4,28 +4,28 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 
-echo "Starting TetherSpan..."
+echo "Starting OpenMultiDisplay..."
 
 # Kill any existing instance
-pkill -f TetherSpan 2>/dev/null || true
+pkill -f OpenMultiDisplay 2>/dev/null || true
 sleep 0.3
 
 # Check if app bundle exists
-if [ -d "$ROOT_DIR/TetherSpan.app" ]; then
-    echo "  Opening TetherSpan.app..."
-    open "$ROOT_DIR/TetherSpan.app"
-elif [ -f "$ROOT_DIR/MacHost/.build/release/TetherSpan" ]; then
+if [ -d "$ROOT_DIR/OpenMultiDisplay.app" ]; then
+    echo "  Opening OpenMultiDisplay.app..."
+    open "$ROOT_DIR/OpenMultiDisplay.app"
+elif [ -f "$ROOT_DIR/MacHost/.build/release/OpenMultiDisplay" ]; then
     echo "  Running release binary..."
-    "$ROOT_DIR/MacHost/.build/release/TetherSpan" &
-elif [ -f "$ROOT_DIR/MacHost/.build/debug/TetherSpan" ]; then
+    "$ROOT_DIR/MacHost/.build/release/OpenMultiDisplay" &
+elif [ -f "$ROOT_DIR/MacHost/.build/debug/OpenMultiDisplay" ]; then
     echo "  Running debug binary..."
-    "$ROOT_DIR/MacHost/.build/debug/TetherSpan" &
+    "$ROOT_DIR/MacHost/.build/debug/OpenMultiDisplay" &
 else
     echo "❌ No build found. Building now..."
     "$SCRIPT_DIR/build_mac.sh"
     echo ""
-    echo "  Opening TetherSpan.app..."
-    open "$ROOT_DIR/TetherSpan.app"
+    echo "  Opening OpenMultiDisplay.app..."
+    open "$ROOT_DIR/OpenMultiDisplay.app"
 fi
 
 echo ""
@@ -39,5 +39,5 @@ fi
 
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "Open 'TetherSpan' on Android and tap Connect"
+echo "Open 'OpenMultiDisplay' on Android and tap Connect"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"

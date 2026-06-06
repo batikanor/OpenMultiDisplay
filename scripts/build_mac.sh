@@ -12,8 +12,8 @@ echo "Building version $VERSION..."
 cd "$ROOT_DIR/MacHost"
 
 # Kill running instance
-echo "Stopping running TetherSpan..."
-pkill -f TetherSpan 2>/dev/null || true
+echo "Stopping running OpenMultiDisplay..."
+pkill -f OpenMultiDisplay 2>/dev/null || true
 sleep 0.5
 
 # Clean old build
@@ -30,12 +30,12 @@ swift build -c release --arch x86_64
 echo "Creating Universal Binary..."
 mkdir -p ".build/release-universal"
 lipo -create \
-  .build/arm64-apple-macosx/release/TetherSpan \
-  .build/x86_64-apple-macosx/release/TetherSpan \
-  -output .build/release-universal/TetherSpan
+  .build/arm64-apple-macosx/release/OpenMultiDisplay \
+  .build/x86_64-apple-macosx/release/OpenMultiDisplay \
+  -output .build/release-universal/OpenMultiDisplay
 
 # Create .app bundle
-APP_NAME="TetherSpan"
+APP_NAME="OpenMultiDisplay"
 APP_DIR="$ROOT_DIR/$APP_NAME.app"
 
 echo "Creating app bundle..."
@@ -44,7 +44,7 @@ mkdir -p "$APP_DIR/Contents/MacOS"
 mkdir -p "$APP_DIR/Contents/Resources"
 
 # Copy universal binary
-cp .build/release-universal/TetherSpan "$APP_DIR/Contents/MacOS/"
+cp .build/release-universal/OpenMultiDisplay "$APP_DIR/Contents/MacOS/"
 
 # Copy app icon if exists
 if [ -f "$ROOT_DIR/MacHost/Resources/AppIcon.icns" ]; then
@@ -59,15 +59,15 @@ cat > "$APP_DIR/Contents/Info.plist" << EOF
 <plist version="1.0">
 <dict>
     <key>CFBundleExecutable</key>
-    <string>TetherSpan</string>
+    <string>OpenMultiDisplay</string>
     <key>CFBundleIconFile</key>
     <string>AppIcon</string>
     <key>CFBundleIdentifier</key>
-    <string>com.batikanor.tetherspan</string>
+    <string>com.batikanor.openmultidisplay</string>
     <key>CFBundleName</key>
-    <string>TetherSpan</string>
+    <string>OpenMultiDisplay</string>
     <key>CFBundleDisplayName</key>
-    <string>TetherSpan</string>
+    <string>OpenMultiDisplay</string>
     <key>CFBundleVersion</key>
     <string>$VERSION</string><!-- VERSION -->
     <key>CFBundleShortVersionString</key>
@@ -83,12 +83,12 @@ cat > "$APP_DIR/Contents/Info.plist" << EOF
     <key>NSSupportsAutomaticGraphicsSwitching</key>
     <true/>
     <key>NSScreenCaptureUsageDescription</key>
-    <string>TetherSpan needs screen recording access to capture your virtual display and stream it to your Android device.</string>
+    <string>OpenMultiDisplay needs screen recording access to capture your virtual display and stream it to your Android device.</string>
     <key>NSLocalNetworkUsageDescription</key>
-    <string>TetherSpan needs Local Network access so your Android tablet can connect to the Mac over WiFi for wireless mode. Without this, only USB-tethered connections work.</string>
+    <string>OpenMultiDisplay needs Local Network access so your Android tablet can connect to the Mac over WiFi for wireless mode. Without this, only USB-tethered connections work.</string>
     <key>NSBonjourServices</key>
     <array>
-        <string>_tetherspan._tcp</string>
+        <string>_openmultidisplay._tcp</string>
     </array>
 </dict>
 </plist>
@@ -96,7 +96,7 @@ EOF
 
 # Ad-hoc code sign to prevent Gatekeeper "damaged" error
 echo "Code signing (ad-hoc)..."
-codesign --force --deep --sign - --entitlements "$ROOT_DIR/MacHost/TetherSpan.entitlements" "$APP_DIR"
+codesign --force --deep --sign - --entitlements "$ROOT_DIR/MacHost/OpenMultiDisplay.entitlements" "$APP_DIR"
 echo "  ✓ App signed"
 
 echo ""
@@ -111,7 +111,7 @@ echo "Creating DMG..."
 DMG_DIR=$(mktemp -d)
 cp -R "$APP_DIR" "$DMG_DIR/"
 ln -s /Applications "$DMG_DIR/Applications"
-DMG_PATH="$ROOT_DIR/TetherSpan-${VERSION}-mac-universal.dmg"
-hdiutil create -volname "TetherSpan" -srcfolder "$DMG_DIR" -ov -format UDZO "$DMG_PATH"
+DMG_PATH="$ROOT_DIR/OpenMultiDisplay-${VERSION}-mac-universal.dmg"
+hdiutil create -volname "OpenMultiDisplay" -srcfolder "$DMG_DIR" -ov -format UDZO "$DMG_PATH"
 rm -rf "$DMG_DIR"
 echo "DMG: $DMG_PATH"

@@ -7,7 +7,7 @@ ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 VERSION=$(cat "$ROOT_DIR/VERSION" | tr -d '[:space:]')
 
 echo "======================================="
-echo "  TetherSpan - Release v$VERSION"
+echo "  OpenMultiDisplay - Release v$VERSION"
 echo "======================================="
 echo ""
 

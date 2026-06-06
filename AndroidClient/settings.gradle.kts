@@ -14,5 +14,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "TetherSpan"
+rootProject.name = "OpenMultiDisplay"
 include(":app")

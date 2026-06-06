@@ -1,4 +1,4 @@
-package com.tetherspan.app
+package com.openmultidisplay.app
 
 import android.annotation.SuppressLint
 import android.app.Dialog
@@ -30,7 +30,7 @@ import androidx.lifecycle.lifecycleScope
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.slider.Slider
 import com.google.android.material.switchmaterial.SwitchMaterial
-import com.tetherspan.app.databinding.ActivityMainBinding
+import com.openmultidisplay.app.databinding.ActivityMainBinding
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.net.InetSocketAddress
@@ -219,7 +219,7 @@ class MainActivity : AppCompatActivity() {
             wakeLock =
                 powerManager.newWakeLock(
                     PowerManager.PARTIAL_WAKE_LOCK,
-                    "TetherSpan::PerformanceMode",
+                    "OpenMultiDisplay::PerformanceMode",
                 )
             // 30 minute timeout instead of infinite acquire
             wakeLock?.acquire(30 * 60 * 1000L)
@@ -1083,7 +1083,7 @@ class MainActivity : AppCompatActivity() {
                 val errorMessage =
                     when {
                         e.message?.contains("ECONNREFUSED") == true -> {
-                            "Mac server is not running.\n\nPlease start TetherSpan on your Mac first."
+                            "Mac server is not running.\n\nPlease start OpenMultiDisplay on your Mac first."
                         }
 
                         e.message?.contains("Network is unreachable") == true -> {
@@ -1097,7 +1097,7 @@ class MainActivity : AppCompatActivity() {
 
                         else -> {
                             "Connection failed: ${e.message}\n\n" +
-                                "Try:\n• Start TetherSpan on Mac\n" +
+                                "Try:\n• Start OpenMultiDisplay on Mac\n" +
                                 "• Check USB connection\n• Run: adb reverse tcp:$port tcp:$port"
                         }
                     }

@@ -4,10 +4,10 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 VERSION=$(cat "$ROOT_DIR/VERSION" | tr -d '[:space:]')
-APP_DIR="$ROOT_DIR/TetherSpan.app"
+APP_DIR="$ROOT_DIR/OpenMultiDisplay.app"
 
 echo "======================================="
-echo "  TetherSpan - Dev Test (v$VERSION)"
+echo "  OpenMultiDisplay - Dev Test (v$VERSION)"
 echo "======================================="
 echo ""
 
@@ -21,7 +21,7 @@ echo "  OK"
 echo "[2/5] Creating .app bundle..."
 mkdir -p "$APP_DIR/Contents/MacOS"
 mkdir -p "$APP_DIR/Contents/Resources"
-cp .build/release/TetherSpan "$APP_DIR/Contents/MacOS/"
+cp .build/release/OpenMultiDisplay "$APP_DIR/Contents/MacOS/"
 
 if [ -f "Resources/AppIcon.icns" ]; then
     cp Resources/AppIcon.icns "$APP_DIR/Contents/Resources/"
@@ -33,13 +33,13 @@ cat > "$APP_DIR/Contents/Info.plist" << EOF
 <plist version="1.0">
 <dict>
     <key>CFBundleExecutable</key>
-    <string>TetherSpan</string>
+    <string>OpenMultiDisplay</string>
     <key>CFBundleIconFile</key>
     <string>AppIcon</string>
     <key>CFBundleIdentifier</key>
-    <string>com.batikanor.tetherspan</string>
+    <string>com.batikanor.openmultidisplay</string>
     <key>CFBundleName</key>
-    <string>TetherSpan</string>
+    <string>OpenMultiDisplay</string>
     <key>CFBundleVersion</key>
     <string>$VERSION</string>
     <key>CFBundleShortVersionString</key>
@@ -53,12 +53,12 @@ cat > "$APP_DIR/Contents/Info.plist" << EOF
     <key>NSHighResolutionCapable</key>
     <true/>
     <key>NSScreenCaptureUsageDescription</key>
-    <string>TetherSpan needs screen recording access to capture your virtual display.</string>
+    <string>OpenMultiDisplay needs screen recording access to capture your virtual display.</string>
 </dict>
 </plist>
 EOF
 
-codesign --force --deep --sign - --entitlements "$ROOT_DIR/MacHost/TetherSpan.entitlements" "$APP_DIR" 2>/dev/null
+codesign --force --deep --sign - --entitlements "$ROOT_DIR/MacHost/OpenMultiDisplay.entitlements" "$APP_DIR" 2>/dev/null
 echo "  OK"
 
 # 3. Build Android
@@ -87,7 +87,7 @@ fi
 
 # 5. Run macOS app
 echo "[5/5] Starting macOS app..."
-pkill -f "TetherSpan.app" 2>/dev/null || true
+pkill -f "OpenMultiDisplay.app" 2>/dev/null || true
 sleep 0.5
 
 adb reverse tcp:54321 tcp:54321 2>/dev/null || true
@@ -97,12 +97,12 @@ echo ""
 echo "======================================="
 echo "  Ready to test!"
 echo "  App: $APP_DIR"
-echo "  Open TetherSpan on your tablet"
+echo "  Launch OpenMultiDisplay on your tablet"
 echo "======================================="
 echo ""
 read -p "Test result? [y=OK / n=failed]: " RESULT
 
-pkill -f "TetherSpan.app" 2>/dev/null || true
+pkill -f "OpenMultiDisplay.app" 2>/dev/null || true
 
 if [ "$RESULT" = "y" ]; then
     echo ""

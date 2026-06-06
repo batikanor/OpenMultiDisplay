@@ -1,4 +1,4 @@
-package com.tetherspan.app
+package com.openmultidisplay.app
 
 import android.app.Activity
 import android.content.Intent
@@ -145,7 +145,7 @@ class WirelessTabController(
                     if (cached != null) {
                         "No response from ${cached.macName} at ${cached.host}:${cached.port}.\n\n" +
                             "The Mac may have switched WiFi networks, changed its port, or is not " +
-                            "running. Open TetherSpan on the Mac and scan the new QR to re-pair."
+                            "running. Launch OpenMultiDisplay on the Mac and scan the new QR to re-pair."
                     } else {
                         "No response from your Mac. Make sure both devices are on the same WiFi " +
                             "and the Mac app is running, then scan the QR again."

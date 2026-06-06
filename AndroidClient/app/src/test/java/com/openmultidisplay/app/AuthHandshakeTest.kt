@@ -1,4 +1,4 @@
-package com.tetherspan.app
+package com.openmultidisplay.app
 
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals

@@ -1,4 +1,4 @@
-// TetherSpan Website JavaScript
+// OpenMultiDisplay Website JavaScript
 
 // ==================== Theme Toggle (runs early to prevent flash) ====================
 (function() {

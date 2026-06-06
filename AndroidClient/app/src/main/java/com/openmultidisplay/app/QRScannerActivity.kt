@@ -1,4 +1,4 @@
-package com.tetherspan.app
+package com.openmultidisplay.app
 
 import android.content.Intent
 import android.os.Bundle
@@ -71,12 +71,12 @@ class QRScannerActivity : AppCompatActivity() {
         val input = InputImage.fromMediaImage(mediaImage, proxy.imageInfo.rotationDegrees)
         scanner.process(input)
             .addOnSuccessListener { barcodes ->
-                val raw = barcodes.firstOrNull { it.rawValue?.startsWith("tetherspan://") == true }?.rawValue
+                val raw = barcodes.firstOrNull { it.rawValue?.startsWith("openmultidisplay://") == true }?.rawValue
                 if (raw != null && !alreadyDelivered) {
                     alreadyDelivered = true
                     val parsed = PairingURL.parse(raw)
                     if (parsed == null) {
-                        Toast.makeText(this, "Invalid QR, expected TetherSpan pairing code", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this, "Invalid QR, expected OpenMultiDisplay pairing code", Toast.LENGTH_SHORT).show()
                         alreadyDelivered = false
                     } else {
                         setResult(RESULT_OK, Intent().putExtra(EXTRA_URL, raw))

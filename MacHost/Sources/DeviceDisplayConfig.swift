@@ -71,14 +71,19 @@ enum DeviceDisplayConfigStore {
 
     static var configURL: URL {
         let newDir = URL(fileURLWithPath: NSHomeDirectory())
-            .appendingPathComponent(".tetherspan", isDirectory: true)
+            .appendingPathComponent(".openmultidisplay", isDirectory: true)
         let newURL = newDir.appendingPathComponent("devices.json")
-        let legacyURL = URL(fileURLWithPath: NSHomeDirectory())
-            .appendingPathComponent(".sidescreen-multi", isDirectory: true)
-            .appendingPathComponent("devices.json")
+        let legacyURLs = [
+            URL(fileURLWithPath: NSHomeDirectory())
+                .appendingPathComponent(".tetherspan", isDirectory: true)
+                .appendingPathComponent("devices.json"),
+            URL(fileURLWithPath: NSHomeDirectory())
+                .appendingPathComponent(".sidescreen-multi", isDirectory: true)
+                .appendingPathComponent("devices.json")
+        ]
 
         if !FileManager.default.fileExists(atPath: newURL.path),
-           FileManager.default.fileExists(atPath: legacyURL.path) {
+           let legacyURL = legacyURLs.first(where: { FileManager.default.fileExists(atPath: $0.path) }) {
             do {
                 try FileManager.default.createDirectory(
                     at: newDir,

@@ -1,7 +1,7 @@
 import Foundation
 import AppKit
 
-print("TetherSpan starting...")
+print("OpenMultiDisplay starting...")
 
 // Entry point
 let app = NSApplication.shared
@@ -13,9 +13,9 @@ let mainMenu = NSMenu()
 let appMenu = NSMenu()
 let appMenuItem = NSMenuItem()
 appMenuItem.submenu = appMenu
-appMenu.addItem(NSMenuItem(title: "About TetherSpan", action: #selector(NSApplication.orderFrontStandardAboutPanel(_:)), keyEquivalent: ""))
+appMenu.addItem(NSMenuItem(title: "About OpenMultiDisplay", action: #selector(NSApplication.orderFrontStandardAboutPanel(_:)), keyEquivalent: ""))
 appMenu.addItem(NSMenuItem.separator())
-appMenu.addItem(NSMenuItem(title: "Quit TetherSpan", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
+appMenu.addItem(NSMenuItem(title: "Quit OpenMultiDisplay", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
 mainMenu.addItem(appMenuItem)
 
 // Edit menu (for standard text editing shortcuts)

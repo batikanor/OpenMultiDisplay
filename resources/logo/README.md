@@ -1,6 +1,6 @@
 # Logo & Icon Guide
 
-Hướng dẫn tạo logo cho TetherSpan.
+Hướng dẫn tạo logo cho OpenMultiDisplay.
 
 ---
 
@@ -8,10 +8,10 @@ Hướng dẫn tạo logo cho TetherSpan.
 
 | File | Kích thước | Format | Dùng ở đâu |
 |------|------------|--------|------------|
-| `tetherspan-icon.png` | 512x512 | PNG (transparent) | macOS app icon, Android icon |
-| `tetherspan-icon@2x.png` | 1024x1024 | PNG (transparent) | Retina displays |
-| `tetherspan-logo.svg` | Vector | SVG | Website, scalable usage |
-| `tetherspan-logo-dark.svg` | Vector | SVG | Dark mode variant |
+| `openmultidisplay-icon.png` | 512x512 | PNG (transparent) | macOS app icon, Android icon |
+| `openmultidisplay-icon@2x.png` | 1024x1024 | PNG (transparent) | Retina displays |
+| `openmultidisplay-logo.svg` | Vector | SVG | Website, scalable usage |
+| `openmultidisplay-logo-dark.svg` | Vector | SVG | Dark mode variant |
 
 ---
 
@@ -55,7 +55,7 @@ Chữ S cách điệu với gradient
 ## Style Guide
 
 **Colors:**
-- Primary: #00B8A9 (TetherSpan Teal)
+- Primary: #00B8A9 (OpenMultiDisplay Teal)
 - Secondary: #FF9F3F (Amber)
 - Gradient: Blue → Amber
 - Background: Transparent hoặc White
@@ -104,7 +104,7 @@ Nếu muốn nhanh, dùng SF Symbols:
 ## Sau khi tạo xong
 
 1. Đặt files vào thư mục này
-2. Copy `tetherspan-icon.png` sang:
+2. Copy `openmultidisplay-icon.png` sang:
    - `website/assets/icon.png` (resize 128x128)
    - `MacHost/Resources/` (nếu cần)
    - `AndroidClient/app/src/main/res/mipmap-xxxhdpi/` (resize theo density)

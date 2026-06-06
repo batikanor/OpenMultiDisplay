@@ -1,6 +1,6 @@
-TetherSpan
+OpenMultiDisplay
 
-TetherSpan is a fork and derivative work of SideScreen:
+OpenMultiDisplay is a fork and derivative work of SideScreen:
 
   https://github.com/tranvuongquocdat/SideScreen
 
@@ -12,11 +12,12 @@ Original notice:
 
 Fork notice:
 
-  Copyright (c) 2026 Batikan Orpava and TetherSpan contributors
+  Copyright (c) 2026 Batikan Orpava and OpenMultiDisplay contributors
 
-Core contributor:
+Core contributors:
 
   Batikan Orpava <batikanor@gmail.com>
+  m2moiz
 
 This repository preserves the upstream MIT license terms. New work in this
 fork is also released under the MIT License unless a file states otherwise.

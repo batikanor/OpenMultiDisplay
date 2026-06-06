@@ -1,6 +1,6 @@
 # Screenshots Guide
 
-Hướng dẫn capture screenshots đẹp cho TetherSpan.
+Hướng dẫn capture screenshots đẹp cho OpenMultiDisplay.
 
 ---
 
@@ -108,7 +108,7 @@ adb pull /sdcard/screenshot.png settings-android.png
 ## Màu sắc & Style
 
 **Palette:**
-- Primary: #00B8A9 (TetherSpan Teal)
+- Primary: #00B8A9 (OpenMultiDisplay Teal)
 - Background: #FAFAFA hoặc #1D1D1F (dark)
 - Text overlay: White với shadow
 

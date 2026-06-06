@@ -6,7 +6,7 @@ enum PairingURL {
         var nameAllowed = CharacterSet.urlQueryAllowed
         nameAllowed.remove(charactersIn: "&=?#")
         let nameEncoded = name.addingPercentEncoding(withAllowedCharacters: nameAllowed) ?? ""
-        return "tetherspan://\(host):\(port)?t=\(tokenStr)&name=\(nameEncoded)"
+        return "openmultidisplay://\(host):\(port)?t=\(tokenStr)&name=\(nameEncoded)"
     }
 
     static func base64URLEncode(_ data: Data) -> String {

@@ -1,6 +1,6 @@
-# TetherSpan
+# OpenMultiDisplay
 
-TetherSpan is an MIT-licensed fork of [SideScreen](https://github.com/tranvuongquocdat/SideScreen) focused on making Android phones and tablets useful as USB-connected macOS displays.
+OpenMultiDisplay is an MIT-licensed fork of [SideScreen](https://github.com/tranvuongquocdat/SideScreen) focused on making Android phones and tablets useful as USB-connected macOS displays.
 
 The immediate target is a MacBook with more than one Android receiver attached at the same time, for example a Galaxy Tab plus a Galaxy Z Fold.
 
@@ -27,7 +27,7 @@ What is still in progress:
 
 ## Why This Fork Exists
 
-Upstream SideScreen is designed around one active Android receiver. That is enough for a tablet-as-monitor workflow, but it does not cover multi-device desk setups. TetherSpan keeps the upstream foundation and extends it toward multi-receiver USB operation.
+Upstream SideScreen is designed around one active Android receiver. That is enough for a tablet-as-monitor workflow, but it does not cover multi-device desk setups. OpenMultiDisplay keeps the upstream foundation and extends it toward multi-receiver USB operation.
 
 ## Requirements
 
@@ -70,7 +70,7 @@ adb devices -l
 ```
 
 4. Build and start the Mac host.
-5. Open TetherSpan on each Android device and use the USB tab.
+5. Launch OpenMultiDisplay on each Android device and use the USB tab.
 
 The Mac host configures:
 
@@ -86,7 +86,7 @@ for authorized Android devices. Android keeps connecting to `127.0.0.1:54321`; t
 USB display profiles live at:
 
 ```text
-~/.tetherspan/devices.json
+~/.openmultidisplay/devices.json
 ```
 
 Each key is an ADB serial. Example:
@@ -123,11 +123,12 @@ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) and [docs/ROADMAP.md](docs/ROAD
 
 ## Attribution
 
-TetherSpan is derived from SideScreen by Trần Vương Quốc Đạt and contributors. The original project is MIT licensed. The original copyright notice is preserved in [LICENSE](LICENSE), and fork-specific attribution is documented in [NOTICE](NOTICE).
+OpenMultiDisplay is derived from SideScreen by Trần Vương Quốc Đạt and contributors. The original project is MIT licensed. The original copyright notice is preserved in [LICENSE](LICENSE), and fork-specific attribution is documented in [NOTICE](NOTICE).
 
-Core contributor for this fork:
+Core contributors for this fork:
 
 - Batikan Orpava `<batikanor@gmail.com>`
+- `m2moiz`
 
 ## License
 

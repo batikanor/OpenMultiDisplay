@@ -3,9 +3,9 @@
 <plist version="1.0">
 <dict>
     <key>CFBundleName</key>
-    <string>TetherSpan</string>
+    <string>OpenMultiDisplay</string>
     <key>CFBundleIdentifier</key>
-    <string>com.batikanor.tetherspan</string>
+    <string>com.batikanor.openmultidisplay</string>
     <key>CFBundleVersion</key>
     <string>0.10.0</string>
     <key>CFBundleShortVersionString</key>

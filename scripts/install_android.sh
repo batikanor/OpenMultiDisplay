@@ -39,5 +39,5 @@ done
 echo "✅ Port 54321 forwarded"
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "Ready! Open 'TetherSpan' on your Android device"
+echo "Ready! Open 'OpenMultiDisplay' on your Android device"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
