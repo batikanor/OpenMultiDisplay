@@ -648,15 +648,15 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 let pipeline = DisplayPipeline(spec: spec)
                 let serial = spec.device.serial
 
-                pipeline.onClientCountChanged = { [weak self] count in
-                    Task { @MainActor in
+                pipeline.onClientCountChanged = { [weak self, serial] count in
+                    DispatchQueue.main.async { [weak self, serial, count] in
                         guard let self else { return }
                         self.pipelineClientCounts[serial] = count
                         self.settings.clientConnected = self.pipelineClientCounts.values.contains { $0 > 0 }
                     }
                 }
-                pipeline.onStats = { [weak self] fps, mbps in
-                    Task { @MainActor in
+                pipeline.onStats = { [weak self, serial] fps, mbps in
+                    DispatchQueue.main.async { [weak self, serial, fps, mbps] in
                         guard let self else { return }
                         self.pipelineStats[serial] = (fps: fps, mbps: mbps)
                         let stats = Array(self.pipelineStats.values)
@@ -666,9 +666,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                         self.settings.currentBitrate = stats.map { $0.mbps }.reduce(0, +)
                     }
                 }
-                pipeline.onCaptureMethodChanged = { [weak self] method in
-                    Task { @MainActor in
-                        self?.settings.captureMethod = "\(spec.name): \(method)"
+                let displayName = spec.name
+                pipeline.onCaptureMethodChanged = { [weak self, displayName] method in
+                    DispatchQueue.main.async { [weak self, displayName, method] in
+                        self?.settings.captureMethod = "\(displayName): \(method)"
                     }
                 }
                 pipeline.onTouchEvent = { [weak self] displayID, x, y, action, pointerCount, x2, y2 in
