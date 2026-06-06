@@ -730,22 +730,48 @@ struct SettingsView: View {
 
                     HStack(spacing: 12) {
                         Button(action: {
-                            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                                settings.toggleServer()
+                            if settings.hasScreenRecordingPermission {
+                                withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                                    settings.toggleServer()
+                                }
+                            } else {
+                                (NSApp.delegate as? AppDelegate)?.requestScreenRecordingPermission()
                             }
                         }) {
                             HStack(spacing: 6) {
-                                Image(systemName: settings.isRunning ? "stop.fill" : "play.fill")
+                                Image(systemName: settings.hasScreenRecordingPermission
+                                      ? (settings.isRunning ? "stop.fill" : "play.fill")
+                                      : "switch.2")
                                     .font(.system(size: 12))
-                                Text(settings.isRunning ? "Stop" : "Start")
+                                Text(settings.hasScreenRecordingPermission
+                                     ? (settings.isRunning ? "Stop" : "Start")
+                                     : "Screen Recording")
                                     .font(.system(size: 13, weight: .medium))
                             }
-                            .frame(width: 90)
+                            .frame(width: settings.hasScreenRecordingPermission ? 90 : 160)
                         }
                         .buttonStyle(.borderedProminent)
-                        .tint(settings.isRunning ? .red : .accentColor)
+                        .tint(settings.hasScreenRecordingPermission
+                              ? (settings.isRunning ? .red : .accentColor)
+                              : .orange)
                         .controlSize(.large)
-                        .disabled(!settings.hasScreenRecordingPermission)
+                        .help(settings.hasScreenRecordingPermission
+                              ? (settings.isRunning ? "Stop streaming" : "Start streaming")
+                              : "Open the macOS Screen Recording privacy toggle")
+
+                        if !settings.hasScreenRecordingPermission {
+                            Button(action: {
+                                (NSApp.delegate as? AppDelegate)?.refreshPermissions()
+                            }) {
+                                HStack(spacing: 5) {
+                                    Image(systemName: "arrow.clockwise")
+                                    Text("Check")
+                                }
+                            }
+                            .buttonStyle(.bordered)
+                            .controlSize(.large)
+                            .help("Check Screen Recording permission again")
+                        }
 
                         if settings.isRunning {
                             HStack(spacing: 6) {
