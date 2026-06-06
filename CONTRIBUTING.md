@@ -33,6 +33,7 @@ cd AndroidClient
 - Keep changes scoped and reviewable.
 - Preserve MIT license attribution for upstream SideScreen code.
 - Keep Batikan Orpava and m2moiz listed as fork contributors unless they ask to be removed.
+- Follow [docs/CODE_STYLE.md](docs/CODE_STYLE.md) for Swift, Kotlin, docs, and validation expectations.
 - Test on real Android hardware when changing USB, decoder, touch, or display behavior.
 - Document user-visible behavior changes in `README.md` or `docs/`.
 - Do not claim independent multi-display support until a per-device virtual-display pipeline is implemented and tested.
@@ -43,6 +44,7 @@ cd AndroidClient
 - [ ] macOS host builds with `swift build`
 - [ ] Android receiver unit tests pass with `./gradlew testDebugUnitTest`
 - [ ] Android receiver builds, or the change does not affect Android
+- [ ] Code style follows `docs/CODE_STYLE.md`
 - [ ] USB behavior was tested or the risk is documented
 - [ ] Multi-device behavior was tested when relevant
 - [ ] Documentation was updated for user-facing changes

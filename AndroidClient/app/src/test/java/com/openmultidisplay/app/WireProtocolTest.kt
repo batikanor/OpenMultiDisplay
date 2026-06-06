@@ -8,7 +8,10 @@ import org.junit.Test
 class WireProtocolTest {
     @Test
     fun encodesMetadataSupportCapability() {
-        assertArrayEquals(byteArrayOf(8), WireProtocol.encodeClientMetadataSupport())
+        assertArrayEquals(
+            byteArrayOf(WireProtocol.MESSAGE_CLIENT_SUPPORTS_FRAME_METADATA.toByte()),
+            WireProtocol.encodeClientMetadataSupport(),
+        )
     }
 
     @Test
@@ -99,7 +102,7 @@ class WireProtocolTest {
     @Test
     fun rejectsMalformedDisplayConfigPacket() {
         assertNull(WireProtocol.parseDisplayConfigPacket(byteArrayOf(1, 0, 0)))
-        assertNull(WireProtocol.parseDisplayConfigPacket(ByteArray(13) { 9 }))
+        assertNull(WireProtocol.parseDisplayConfigPacket(ByteArray(WireProtocol.DISPLAY_CONFIG_PACKET_SIZE) { 9 }))
     }
 
     @Test
@@ -122,6 +125,6 @@ class WireProtocolTest {
     @Test
     fun rejectsMalformedMetadataFrameHeader() {
         assertNull(WireProtocol.parseMetadataFrameHeader(byteArrayOf(6, 0, 0)))
-        assertNull(WireProtocol.parseMetadataFrameHeader(ByteArray(14) { 0 }))
+        assertNull(WireProtocol.parseMetadataFrameHeader(ByteArray(WireProtocol.METADATA_FRAME_HEADER_SIZE) { 0 }))
     }
 }

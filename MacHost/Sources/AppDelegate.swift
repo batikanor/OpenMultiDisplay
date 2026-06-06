@@ -5,7 +5,7 @@ import ApplicationServices
 import os.log
 @preconcurrency import ScreenCaptureKit
 
-// Debug file logger - writes to /tmp/openmultidisplay.log
+// Debug file logger. Writes to /tmp/openmultidisplay.log.
 func debugLog(_ message: String) {
     let timestamp = DateFormatter.localizedString(from: Date(), dateStyle: .none, timeStyle: .medium)
     let line = "[\(timestamp)] \(message)\n"
@@ -45,6 +45,14 @@ struct GestureThresholds {
     static let minTouchInterval: UInt64 = 8_000_000    // ~120Hz
 }
 
+private enum HostRuntimeConstants {
+    static let statusRefreshInterval: TimeInterval = 2.0
+    static let adbReverseRetryCount = 3
+    static let adbReverseRetryDelayNanoseconds: UInt64 = 1_000_000_000
+    static let virtualDisplayRegistrationDelayNanoseconds: UInt64 = 500_000_000
+    static let fallbackDisplaySpacing = 40
+}
+
 @available(macOS 14.0, *)
 class AppDelegate: NSObject, NSApplicationDelegate {
     var streamingServer: StreamingServer?
@@ -66,7 +74,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var pipelineStats: [String: (fps: Double, mbps: Double)] = [:]
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        print("✅ App launched")
+        debugLog("App launched")
 
         // Create menu bar item
         setupMenuBar()
@@ -95,7 +103,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         // Periodic status refresh for the per-mode checklist (ADB / WiFi / Listening IP).
-        statusRefreshTimer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { [weak self] _ in
+        statusRefreshTimer = Timer.scheduledTimer(
+            withTimeInterval: HostRuntimeConstants.statusRefreshInterval,
+            repeats: true
+        ) { [weak self] _ in
             Task { @MainActor in
                 self?.refreshStatusIndicators()
             }
@@ -117,7 +128,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         // While a wireless client is actively streaming, keep its lastConnected
         // rolling forward so the UI shows "just now". On disconnect, the
-        // onClientDisconnected handler clears currentWirelessDevice — from that
+        // onClientDisconnected handler clears currentWirelessDevice. From that
         // point lastConnected stays frozen at the disconnect moment, so the
         // "X minutes ago" label counts up correctly.
         if let name = currentWirelessDevice {
@@ -183,12 +194,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func setupSettingsObservers() {
-        // Observer cho gaming boost changes
+        // Propagate gaming boost changes to all active encoders.
         settings.$gamingBoost
             .dropFirst() // Skip initial value
             .sink { [weak self] gamingBoost in
                 guard let self = self, self.settings.isRunning else { return }
-                print("🎮 Gaming Boost \(gamingBoost ? "ENABLED" : "DISABLED")")
+                debugLog("Gaming boost \(gamingBoost ? "enabled" : "disabled")")
                 self.screenCapture?.updateEncoderSettings(
                     bitrateMbps: self.settings.effectiveBitrate,
                     quality: self.settings.effectiveQuality,
@@ -204,12 +215,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             }
             .store(in: &cancellables)
 
-        // Observer cho bitrate/quality changes (chỉ khi không gaming boost)
+        // Propagate bitrate/quality changes when gaming boost is not overriding them.
         Publishers.CombineLatest(settings.$bitrate, settings.$quality)
             .dropFirst()
             .sink { [weak self] bitrate, quality in
                 guard let self = self, self.settings.isRunning, !self.settings.gamingBoost else { return }
-                print("⚙️ Settings updated: \(bitrate)Mbps, \(quality)")
+                debugLog("Encoder settings updated: \(bitrate)Mbps, \(quality)")
                 self.screenCapture?.updateEncoderSettings(
                     bitrateMbps: bitrate,
                     quality: quality,
@@ -225,12 +236,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             }
             .store(in: &cancellables)
 
-        // Observer cho rotation changes - send to connected client immediately
+        // Send rotation changes to connected clients immediately.
         settings.$rotation
             .dropFirst()
             .sink { [weak self] rotation in
                 guard let self = self, self.settings.isRunning else { return }
-                print("🔄 Rotation changed to \(rotation)°")
+                debugLog("Rotation changed to \(rotation) degrees")
                 self.streamingServer?.updateRotation(rotation)
                 for pipeline in self.displayPipelines.values {
                     pipeline.updateRotation(rotation)
@@ -238,8 +249,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             }
             .store(in: &cancellables)
 
-        // Observer cho touch enable/disable - propagate to streaming server so
-        // incoming touch frames from the client are dropped early when off.
+        // Propagate touch enablement so incoming client touch frames are dropped
+        // early when touch is disabled.
         settings.$touchEnabled
             .dropFirst()
             .sink { [weak self] enabled in
@@ -248,7 +259,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             }
             .store(in: &cancellables)
 
-        // Observer cho connection mode changes — restart server with new auth/ADB policy.
+        // Restart server with the selected auth/ADB policy when mode changes.
         settings.$connectionMode
             .dropFirst()
             .sink { [weak self] mode in
@@ -298,7 +309,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     func checkPermissions() async {
         let version = ProcessInfo.processInfo.operatingSystemVersion
-        debugLog("checkPermissions — macOS \(version.majorVersion).\(version.minorVersion).\(version.patchVersion)")
+        debugLog("checkPermissions: macOS \(version.majorVersion).\(version.minorVersion).\(version.patchVersion)")
 
         // Check Screen Recording permission using CoreGraphics API
         let hasScreenCapture = CGPreflightScreenCaptureAccess()
@@ -312,7 +323,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             if version.majorVersion >= 26 {
                 do {
                     let content = try await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: false)
-                    debugLog("SCShareableContent verification OK — \(content.displays.count) displays found")
+                    debugLog("SCShareableContent verification OK: \(content.displays.count) displays found")
                 } catch {
                     debugLog("WARNING: CGPreflight OK but SCShareableContent failed on macOS 26: \(error.localizedDescription)")
                     debugLog("CGDisplayStream fallback will likely activate at capture time")
@@ -333,9 +344,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             settings.hasAccessibilityPermission = trusted
         }
         if trusted {
-            print("✅ Accessibility permission granted")
+            debugLog("Accessibility permission granted")
         } else {
-            print("⚠️  Accessibility permission not granted - touch control will not work")
+            debugLog("Accessibility permission not granted; touch control will not work")
         }
     }
 
@@ -347,14 +358,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         settings.hasAccessibilityPermission = trusted
 
         if !trusted {
-            print("⚠️  User needs to grant Accessibility permission in System Settings")
+            debugLog("User needs to grant Accessibility permission in System Settings")
         }
     }
 
     /// Setup ADB reverse port forwarding for USB connection
     func setupADBReverse() async {
         let port = settings.port
-        print("🔌 Setting up ADB reverse for port \(port)...")
+        debugLog("Setting up ADB reverse for port \(port)")
 
         await Task.detached(priority: .utility) {
             // Try common adb paths
@@ -392,17 +403,17 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                         adbPath = path
                     }
                 } catch {
-                    // Ignore
+                    // `which` can fail if adb is not installed; explicit paths were already checked.
                 }
             }
 
             guard let finalAdbPath = adbPath else {
-                print("⚠️  ADB not found - USB connection may not work")
-                print("💡 Install Android SDK or run manually: adb reverse tcp:\(port) tcp:\(port)")
+                debugLog("ADB not found; USB connection may not work")
+                debugLog("Install Android SDK or run manually: adb reverse tcp:\(port) tcp:\(port)")
                 return
             }
 
-            print("📱 Found ADB at: \(finalAdbPath)")
+            debugLog("Found ADB at: \(finalAdbPath)")
 
             func authorizedDevices() -> [String] {
                 let process = Process()
@@ -425,23 +436,23 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                         return parts[0]
                     }
                 } catch {
-                    print("⚠️  Failed to list ADB devices: \(error.localizedDescription)")
+                    debugLog("Failed to list ADB devices: \(error.localizedDescription)")
                     return []
                 }
             }
 
             let devices = authorizedDevices()
             guard !devices.isEmpty else {
-                print("⚠️  No authorized Android USB devices found")
-                print("💡 Unlock each device and accept the USB debugging prompt")
+                debugLog("No authorized Android USB devices found")
+                debugLog("Unlock each device and accept the USB debugging prompt")
                 return
             }
 
-            print("📱 Authorized ADB device(s): \(devices.joined(separator: ", "))")
+            debugLog("Authorized ADB device(s): \(devices.joined(separator: ", "))")
 
-            // Retry adb reverse up to 3 times — handles first-install authorization delay.
+            // Retry adb reverse to handle first-install authorization delay.
             // Target every serial explicitly so two Android devices can attach at once.
-            for attempt in 1...3 {
+            for attempt in 1...HostRuntimeConstants.adbReverseRetryCount {
                 var failedDevices: [String] = []
 
                 for serial in devices {
@@ -461,29 +472,37 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                         let output = String(data: data, encoding: .utf8) ?? ""
 
                         if process.terminationStatus == 0 {
-                            print("✅ ADB reverse setup successful for \(serial): tcp:\(port) -> tcp:\(port)")
+                            debugLog("ADB reverse setup successful for \(serial): tcp:\(port) -> tcp:\(port)")
                         } else {
                             failedDevices.append(serial)
-                            print("⚠️  ADB reverse attempt \(attempt)/3 failed for \(serial): \(output.trimmingCharacters(in: .whitespacesAndNewlines))")
+                            let message = output.trimmingCharacters(in: .whitespacesAndNewlines)
+                            debugLog(
+                                "ADB reverse attempt \(attempt)/\(HostRuntimeConstants.adbReverseRetryCount) " +
+                                "failed for \(serial): \(message)"
+                            )
                         }
                     } catch {
                         failedDevices.append(serial)
-                        print("⚠️  Failed to run ADB for \(serial) (attempt \(attempt)/3): \(error.localizedDescription)")
+                        debugLog(
+                            "Failed to run ADB for \(serial) " +
+                            "(attempt \(attempt)/\(HostRuntimeConstants.adbReverseRetryCount)): " +
+                            error.localizedDescription
+                        )
                     }
                 }
 
                 if failedDevices.isEmpty {
-                    print("✅ ADB reverse setup complete for \(devices.count) device(s)")
+                    debugLog("ADB reverse setup complete for \(devices.count) device(s)")
                     return
                 } else {
-                    print("⚠️  ADB reverse still pending for: \(failedDevices.joined(separator: ", "))")
-                    if attempt < 3 {
-                        try? await Task.sleep(nanoseconds: 1_000_000_000)
+                    debugLog("ADB reverse still pending for: \(failedDevices.joined(separator: ", "))")
+                    if attempt < HostRuntimeConstants.adbReverseRetryCount {
+                        try? await Task.sleep(nanoseconds: HostRuntimeConstants.adbReverseRetryDelayNanoseconds)
                     }
                 }
             }
 
-            print("💡 Make sure Android device is connected via USB with debugging enabled")
+            debugLog("Make sure Android device is connected via USB with debugging enabled")
         }.value
     }
 
@@ -497,11 +516,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         guard !mappings.isEmpty else { return false }
-        print("🔌 Setting up per-device ADB reverse mappings...")
+        debugLog("Setting up per-device ADB reverse mappings")
 
         return await Task.detached(priority: .utility) { () async -> Bool in
             guard let adbPath = StatusDetector.adbExecutablePath() else {
-                print("⚠️  ADB not found - USB connection may not work")
+                debugLog("ADB not found; USB connection may not work")
                 return false
             }
 
@@ -525,7 +544,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 }
             }
 
-            for attempt in 1...3 {
+            for attempt in 1...HostRuntimeConstants.adbReverseRetryCount {
                 var failed: [String] = []
 
                 for mapping in mappings {
@@ -538,20 +557,23 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                     ])
 
                     if result.status == 0 {
-                        print("✅ \(mapping.name) (\(mapping.serial)): tcp:\(androidPort) -> tcp:\(mapping.hostPort)")
+                        debugLog("\(mapping.name) (\(mapping.serial)): tcp:\(androidPort) -> tcp:\(mapping.hostPort)")
                     } else {
                         failed.append(mapping.serial)
-                        print("⚠️  ADB reverse attempt \(attempt)/3 failed for \(mapping.serial): \(result.output)")
+                        debugLog(
+                            "ADB reverse attempt \(attempt)/\(HostRuntimeConstants.adbReverseRetryCount) " +
+                            "failed for \(mapping.serial): \(result.output)"
+                        )
                     }
                 }
 
                 if failed.isEmpty {
-                    print("✅ Per-device ADB reverse setup complete for \(mappings.count) device(s)")
+                    debugLog("Per-device ADB reverse setup complete for \(mappings.count) device(s)")
                     return true
                 }
 
-                if attempt < 3 {
-                    try? await Task.sleep(nanoseconds: 1_000_000_000)
+                if attempt < HostRuntimeConstants.adbReverseRetryCount {
+                    try? await Task.sleep(nanoseconds: HostRuntimeConstants.adbReverseRetryDelayNanoseconds)
                 }
             }
 
@@ -654,7 +676,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             let fallbackY = Int(mainBounds.minY)
             var nextFallbackX = Int(mainBounds.maxX)
             let basePort = Int(settings.port)
-            let spacing = 40
+            let spacing = HostRuntimeConstants.fallbackDisplaySpacing
             var specs: [DeviceDisplaySpec] = []
 
             for (index, device) in devices.enumerated() {
@@ -734,9 +756,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             settings.displayCreated = !displayPipelines.isEmpty
             settings.clientConnected = false
             settings.isRunning = true
-            print("✅ Started \(displayPipelines.count) independent USB display pipeline(s)")
+            debugLog("Started \(displayPipelines.count) independent USB display pipeline(s)")
         } catch {
-            print("❌ Failed to start USB display pipelines: \(error)")
+            debugLog("Failed to start USB display pipelines: \(error)")
             stopDisplayPipelines()
             await MainActor.run {
                 settings.isRunning = false
@@ -789,14 +811,18 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             }
 
             // Run ADB setup (USB only) and display init wait in parallel.
-            // For wireless mode, skip ADB entirely — the auth handshake gates LAN connections instead.
+            // For wireless mode, skip ADB entirely. The auth handshake gates LAN connections instead.
             await withTaskGroup(of: Void.self) { group in
                 if settings.connectionMode == .usb {
                     group.addTask { await self.setupADBReverse() }
                 } else {
                     debugLog("Wireless mode: skipping ADB setup")
                 }
-                group.addTask { try? await Task.sleep(nanoseconds: 500_000_000) }
+                group.addTask {
+                    try? await Task.sleep(
+                        nanoseconds: HostRuntimeConstants.virtualDisplayRegistrationDelayNanoseconds
+                    )
+                }
             }
 
             virtualDisplayManager?.restoreDisplayPosition()
@@ -805,7 +831,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             if let vdm = virtualDisplayManager {
                 let registered = vdm.verifyDisplayRegistered()
                 if !registered {
-                    debugLog("WARNING: Virtual display not found in online display list — capture may fail")
+                    debugLog("WARNING: Virtual display not found in online display list; capture may fail")
                 }
             }
 
@@ -893,9 +919,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 settings.isRunning = true
             }
 
-            print("✅ Server started on port \(settings.port)")
+            debugLog("Server started on port \(settings.port)")
         } catch {
-            print("❌ Failed to start: \(error)")
+            debugLog("Failed to start: \(error)")
             await MainActor.run {
                 settings.isRunning = false
                 settings.displayCreated = false
@@ -924,7 +950,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         settings.currentFPS = 0
         settings.currentBitrate = 0
 
-        print("⏹️ Server stopped")
+        debugLog("Server stopped")
     }
 
     // MARK: - Gesture Properties
@@ -975,7 +1001,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         if !AXIsProcessTrusted() {
             if !accessibilityWarningShown {
                 accessibilityWarningShown = true
-                print("⚠️  Accessibility not granted - touch ignored")
+                debugLog("Accessibility not granted; touch ignored")
                 Task { @MainActor in
                     settings.hasAccessibilityPermission = false
                 }

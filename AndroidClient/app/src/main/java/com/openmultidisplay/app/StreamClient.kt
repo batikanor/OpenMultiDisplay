@@ -10,7 +10,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.io.BufferedInputStream
 import java.io.DataInputStream
+import java.io.DataOutputStream
 import java.io.IOException
 import java.net.Socket
 import java.nio.ByteBuffer
@@ -25,7 +27,7 @@ class StreamClient(
 ) {
     private var socket: Socket? = null
     private var inputStream: DataInputStream? = null
-    private var outputStream: java.io.DataOutputStream? = null
+    private var outputStream: DataOutputStream? = null
     private var isConnected = false
 
     // Callback includes actual frame size (may differ from buffer.size due to pooling),
@@ -43,14 +45,12 @@ class StreamClient(
     private var lastKeyframeRequestNs = 0L
     private var lastKeyframeReceivedNs = 0L
 
-    // Buffer pooling to reduce GC pressure from per-frame allocations
-    // At 60fps with ~100KB frames, this prevents ~6MB/s of allocations
-    private val bufferPool = ArrayDeque<ByteArray>(8)
+    // Buffer pooling reduces GC pressure from per-frame allocations.
+    private val bufferPool = ArrayDeque<ByteArray>(FRAME_BUFFER_POOL_LIMIT)
     private val poolLock = Any()
 
     /**
-     * Acquire a buffer from pool or allocate new one if needed
-     * @param minSize Minimum size required for the buffer
+     * Acquire a pooled buffer, or allocate a new one if no reusable buffer is large enough.
      */
     private fun acquireBuffer(minSize: Int): ByteArray {
         synchronized(poolLock) {
@@ -63,21 +63,17 @@ class StreamClient(
                 }
             }
         }
-        // No suitable buffer found, allocate new one
         return ByteArray(minSize)
     }
 
     /**
-     * Release a buffer back to the pool for reuse
-     * Called after decode completes via onFrameDecoded callback
+     * Release a buffer back to the pool after decode completes.
      */
     fun releaseBuffer(buffer: ByteArray) {
         synchronized(poolLock) {
-            // Keep pool size limited to prevent memory bloat
-            if (bufferPool.size < 8) {
+            if (bufferPool.size < FRAME_BUFFER_POOL_LIMIT) {
                 bufferPool.addLast(buffer)
             }
-            // If pool is full, let buffer be GC'd
         }
     }
 
@@ -107,12 +103,16 @@ class StreamClient(
     suspend fun connect() =
         withContext(Dispatchers.IO) {
             try {
-                socket =
+                val connectedSocket =
                     Socket(host, port).apply {
                         tcpNoDelay = true
                     }
-                inputStream = DataInputStream(java.io.BufferedInputStream(socket?.getInputStream(), 65536))
-                outputStream = java.io.DataOutputStream(socket?.getOutputStream())
+                socket = connectedSocket
+                inputStream =
+                    DataInputStream(
+                        BufferedInputStream(connectedSocket.getInputStream(), READ_BUFFER_SIZE_BYTES),
+                    )
+                outputStream = DataOutputStream(connectedSocket.getOutputStream())
                 advertiseFrameMetadataSupport()
                 isConnected = true
                 lastKeyframeReceivedNs = 0L
@@ -125,16 +125,16 @@ class StreamClient(
 
                 receiveData()
             } catch (e: Exception) {
-                Log.e(TAG, "❌ Connection error", e)
+                Log.e(TAG, "Connection error", e)
                 onConnectionStatus?.invoke(false)
                 cleanup()
             }
         }
 
     sealed class WirelessConnectError(msg: String) : Exception(msg) {
-        object NetworkUnreachable : WirelessConnectError("Mac unreachable — check both on same WiFi")
+        object NetworkUnreachable : WirelessConnectError("Mac unreachable - check both on same WiFi")
 
-        object TokenRejected : WirelessConnectError("Token rejected — re-pair required")
+        object TokenRejected : WirelessConnectError("Token rejected - re-pair required")
 
         object ProtocolError : WirelessConnectError("Connection error, please rescan QR")
     }
@@ -172,10 +172,10 @@ class StreamClient(
                 } else {
                     Log.w(TAG, "connectWireless: no WiFi network found, using default routing")
                 }
-                sock.connect(java.net.InetSocketAddress(host, port), 5000)
+                sock.connect(java.net.InetSocketAddress(host, port), WIFI_CONNECT_TIMEOUT_MS)
                 sock
             } catch (e: java.net.SocketTimeoutException) {
-                Log.e(TAG, "connectWireless: TCP connect timeout to $host:$port (5s)")
+                Log.e(TAG, "connectWireless: TCP connect timeout to $host:$port (${WIFI_CONNECT_TIMEOUT_MS}ms)")
                 throw WirelessConnectError.NetworkUnreachable
             } catch (e: IOException) {
                 Log.e(
@@ -186,7 +186,8 @@ class StreamClient(
             }
         Log.i(
             TAG,
-            "connectWireless: TCP connected, sending handshake (${37 + deviceName.toByteArray().size} bytes)",
+            "connectWireless: TCP connected, sending handshake " +
+                "(${AuthHandshake.REQUEST_FIXED_SIZE_BYTES + deviceName.toByteArray().size} bytes)",
         )
 
         val request = AuthHandshake.encodeRequest(token, deviceName)
@@ -194,50 +195,38 @@ class StreamClient(
             s.getOutputStream().write(request)
             s.getOutputStream().flush()
         } catch (e: IOException) {
-            try {
-                s.close()
-            } catch (_: IOException) {
-            }
+            s.closeQuietly()
             throw WirelessConnectError.NetworkUnreachable
         }
 
-        val responseBuf = ByteArray(5)
+        val responseBuf = ByteArray(AuthHandshake.RESPONSE_SIZE_BYTES)
         var read = 0
         try {
-            while (read < 5) {
-                val r = s.getInputStream().read(responseBuf, read, 5 - read)
+            while (read < responseBuf.size) {
+                val r = s.getInputStream().read(responseBuf, read, responseBuf.size - read)
                 if (r <= 0) break
                 read += r
             }
         } catch (e: IOException) {
-            try {
-                s.close()
-            } catch (_: IOException) {
-            }
+            s.closeQuietly()
             throw WirelessConnectError.NetworkUnreachable
         }
-        if (read != 5) {
-            try {
-                s.close()
-            } catch (_: IOException) {
-            }
+        if (read != responseBuf.size) {
+            s.closeQuietly()
             throw WirelessConnectError.ProtocolError
         }
 
         val status =
             AuthHandshake.parseResponse(responseBuf) ?: run {
-                try {
-                    s.close()
-                } catch (_: IOException) {
-                }
+                s.closeQuietly()
                 throw WirelessConnectError.ProtocolError
             }
         Log.i(TAG, "connectWireless: handshake response status=$status")
         when (status) {
             AuthHandshake.ResponseStatus.OK -> {
                 socket = s
-                inputStream = DataInputStream(java.io.BufferedInputStream(s.getInputStream(), 65536))
-                outputStream = java.io.DataOutputStream(s.getOutputStream())
+                inputStream = DataInputStream(BufferedInputStream(s.getInputStream(), READ_BUFFER_SIZE_BYTES))
+                outputStream = DataOutputStream(s.getOutputStream())
                 advertiseFrameMetadataSupport()
                 isConnected = true
                 diagLog("Wireless connected to $host:$port")
@@ -245,17 +234,11 @@ class StreamClient(
                 receiveData()
             }
             AuthHandshake.ResponseStatus.INVALID_TOKEN -> {
-                try {
-                    s.close()
-                } catch (_: IOException) {
-                }
+                s.closeQuietly()
                 throw WirelessConnectError.TokenRejected
             }
             else -> {
-                try {
-                    s.close()
-                } catch (_: IOException) {
-                }
+                s.closeQuietly()
                 throw WirelessConnectError.ProtocolError
             }
         }
@@ -294,8 +277,8 @@ class StreamClient(
                             onDisplaySize?.invoke(width, height, rotation)
                         }
 
-                        5 -> { // Pong response — measure round-trip latency
-                            val buf = ByteArray(8)
+                        WireProtocol.MESSAGE_PONG -> {
+                            val buf = ByteArray(WireProtocol.PONG_TIMESTAMP_SIZE_BYTES)
                             input.readFully(buf)
                             val sentTime = ByteBuffer.wrap(buf).order(ByteOrder.LITTLE_ENDIAN).long
                             val rtt = (System.nanoTime() - sentTime) / 1_000_000.0 // ms
@@ -305,7 +288,7 @@ class StreamClient(
                         else -> {
                             Log.e(
                                 TAG,
-                                "Unknown message type: ${type.toInt()}, stream may be misaligned — disconnecting",
+                                "Unknown message type: ${type.toInt()}, stream may be misaligned; disconnecting",
                             )
                             break
                         }
@@ -313,7 +296,7 @@ class StreamClient(
                 }
             } catch (e: IOException) {
                 if (isConnected) {
-                    Log.e(TAG, "❌ Read error", e)
+                    Log.e(TAG, "Read error", e)
                 }
             } finally {
                 disconnect()
@@ -407,7 +390,7 @@ class StreamClient(
         val now = System.currentTimeMillis()
         val elapsed = now - lastStatsTime
 
-        if (elapsed >= 1000) {
+        if (elapsed >= STATS_WINDOW_MS) {
             val mbps = (bytesReceived * 8.0) / (elapsed / 1000.0) / 1_000_000
             val fps = (framesReceived * 1000.0) / elapsed
             onStats?.invoke(fps, mbps)
@@ -498,13 +481,14 @@ class StreamClient(
             inputStream?.close()
             socket?.close()
 
-            // Properly shutdown executor with timeout to prevent orphaned threads
             touchExecutor.shutdown()
             try {
-                if (!touchExecutor.awaitTermination(500, TimeUnit.MILLISECONDS)) {
+                if (!touchExecutor.awaitTermination(TOUCH_EXECUTOR_SHUTDOWN_TIMEOUT_MS, TimeUnit.MILLISECONDS)) {
                     touchExecutor.shutdownNow()
-                    // Wait a bit more for forced shutdown
-                    touchExecutor.awaitTermination(200, TimeUnit.MILLISECONDS)
+                    touchExecutor.awaitTermination(
+                        TOUCH_EXECUTOR_FORCED_SHUTDOWN_TIMEOUT_MS,
+                        TimeUnit.MILLISECONDS,
+                    )
                 }
             } catch (e: InterruptedException) {
                 touchExecutor.shutdownNow()
@@ -520,9 +504,22 @@ class StreamClient(
 
     private fun diagLog(msg: String) = DiagLog.log("SC", msg)
 
+    private fun Socket.closeQuietly() {
+        try {
+            close()
+        } catch (_: IOException) {
+        }
+    }
+
     companion object {
         private const val TAG = "StreamClient"
+        private const val READ_BUFFER_SIZE_BYTES = 64 * 1024
+        private const val FRAME_BUFFER_POOL_LIMIT = 8
         private const val MAX_FRAME_SIZE = 5 * 1024 * 1024 // 5MB
+        private const val WIFI_CONNECT_TIMEOUT_MS = 5_000
+        private const val STATS_WINDOW_MS = 1_000L
+        private const val TOUCH_EXECUTOR_SHUTDOWN_TIMEOUT_MS = 500L
+        private const val TOUCH_EXECUTOR_FORCED_SHUTDOWN_TIMEOUT_MS = 200L
         private const val KEYFRAME_REQUEST_INTERVAL_NS = 500_000_000L
         private const val KEYFRAME_STALE_INTERVAL_NS = 1_500_000_000L
 

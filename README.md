@@ -52,6 +52,7 @@ cd AndroidClient
 | [docs/USB.md](docs/USB.md) | USB setup, ADB reverse mapping, device profiles, disconnect behavior, troubleshooting. |
 | [docs/SUPPORT.md](docs/SUPPORT.md) | MacBook Air/Pro/Neo support matrix, Android requirements, official citations, development machine specs. |
 | [docs/TESTING.md](docs/TESTING.md) | Automated CI matrix, local validation commands, physical hardware validation, remaining gaps. |
+| [docs/CODE_STYLE.md](docs/CODE_STYLE.md) | Swift/Kotlin style rules, reference projects, testing expectations, documentation standards. |
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Host/client pipeline structure and design constraints. |
 | [docs/ROADMAP.md](docs/ROADMAP.md) | Product-quality milestones and remaining work. |
 

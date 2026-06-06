@@ -14,6 +14,10 @@ object WireProtocol {
     const val MESSAGE_CLIENT_SUPPORTS_FRAME_METADATA = 8
 
     const val FRAME_FLAG_KEYFRAME = 1
+    const val DISPLAY_CONFIG_PACKET_SIZE = 13
+    const val METADATA_FRAME_HEADER_SIZE = 14
+    const val PING_PACKET_SIZE = 9
+    const val PONG_TIMESTAMP_SIZE_BYTES = 8
     private const val KEYFRAME_REQUEST_FLAG_FORCE = 1
 
     data class DisplayConfig(
@@ -59,14 +63,14 @@ object WireProtocol {
     }
 
     fun encodePing(timestampNanos: Long): ByteArray {
-        val buffer = ByteBuffer.allocate(9).order(ByteOrder.LITTLE_ENDIAN)
+        val buffer = ByteBuffer.allocate(PING_PACKET_SIZE).order(ByteOrder.LITTLE_ENDIAN)
         buffer.put(MESSAGE_PING.toByte())
         buffer.putLong(timestampNanos)
         return buffer.array()
     }
 
     fun parseDisplayConfigPacket(packet: ByteArray): DisplayConfig? {
-        if (packet.size != 13 || packet[0].toInt() != MESSAGE_DISPLAY_CONFIG) return null
+        if (packet.size != DISPLAY_CONFIG_PACKET_SIZE || packet[0].toInt() != MESSAGE_DISPLAY_CONFIG) return null
         val buffer = ByteBuffer.wrap(packet, 1, 12).order(ByteOrder.BIG_ENDIAN)
         return DisplayConfig(
             width = buffer.int,
@@ -76,7 +80,10 @@ object WireProtocol {
     }
 
     fun parseMetadataFrameHeader(packetHeader: ByteArray): MetadataFrameHeader? {
-        if (packetHeader.size != 14 || packetHeader[0].toInt() != MESSAGE_VIDEO_FRAME_WITH_METADATA) {
+        if (
+            packetHeader.size != METADATA_FRAME_HEADER_SIZE ||
+            packetHeader[0].toInt() != MESSAGE_VIDEO_FRAME_WITH_METADATA
+        ) {
             return null
         }
         val buffer = ByteBuffer.wrap(packetHeader).order(ByteOrder.BIG_ENDIAN)

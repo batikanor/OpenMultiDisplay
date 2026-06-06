@@ -9,11 +9,11 @@ import org.junit.Test
 class AuthHandshakeTest {
     @Test
     fun encodesGoldenBytes() {
-        val token = ByteArray(32) { it.toByte() }
+        val token = ByteArray(AuthHandshake.TOKEN_SIZE_BYTES) { it.toByte() }
         val bytes = AuthHandshake.encodeRequest(token, "iPad Air")
         val expected =
             byteArrayOf(0x53, 0x53, 0x57, 0x41) +
-                ByteArray(32) { it.toByte() } +
+                ByteArray(AuthHandshake.TOKEN_SIZE_BYTES) { it.toByte() } +
                 byteArrayOf(8) +
                 "iPad Air".toByteArray()
         assertArrayEquals(expected, bytes)
@@ -21,33 +21,33 @@ class AuthHandshakeTest {
 
     @Test
     fun rejectsNameLongerThan64() {
-        val longName = "x".repeat(65)
+        val longName = "x".repeat(AuthHandshake.MAX_DEVICE_NAME_BYTES + 1)
 
         assertThrows(IllegalArgumentException::class.java) {
-            AuthHandshake.encodeRequest(ByteArray(32), longName)
+            AuthHandshake.encodeRequest(ByteArray(AuthHandshake.TOKEN_SIZE_BYTES), longName)
         }
     }
 
     @Test
     fun rejectsTokenWrongSize() {
         assertThrows(IllegalArgumentException::class.java) {
-            AuthHandshake.encodeRequest(ByteArray(31), "x")
+            AuthHandshake.encodeRequest(ByteArray(AuthHandshake.TOKEN_SIZE_BYTES - 1), "x")
         }
     }
 
     @Test
     fun acceptsNameWithExactly64Utf8Bytes() {
-        val name = "x".repeat(64)
-        val encoded = AuthHandshake.encodeRequest(ByteArray(32), name)
+        val name = "x".repeat(AuthHandshake.MAX_DEVICE_NAME_BYTES)
+        val encoded = AuthHandshake.encodeRequest(ByteArray(AuthHandshake.TOKEN_SIZE_BYTES), name)
 
-        assertEquals(37 + 64, encoded.size)
-        assertEquals(64, encoded[36].toInt())
+        assertEquals(AuthHandshake.REQUEST_FIXED_SIZE_BYTES + AuthHandshake.MAX_DEVICE_NAME_BYTES, encoded.size)
+        assertEquals(AuthHandshake.MAX_DEVICE_NAME_BYTES, encoded[AuthHandshake.REQUEST_FIXED_SIZE_BYTES - 1].toInt())
     }
 
     @Test
     fun rejectsEmptyName() {
         assertThrows(IllegalArgumentException::class.java) {
-            AuthHandshake.encodeRequest(ByteArray(32), "")
+            AuthHandshake.encodeRequest(ByteArray(AuthHandshake.TOKEN_SIZE_BYTES), "")
         }
     }
 
@@ -56,7 +56,7 @@ class AuthHandshakeTest {
         val name = "🙂".repeat(17)
 
         assertThrows(IllegalArgumentException::class.java) {
-            AuthHandshake.encodeRequest(ByteArray(32), name)
+            AuthHandshake.encodeRequest(ByteArray(AuthHandshake.TOKEN_SIZE_BYTES), name)
         }
     }
 
