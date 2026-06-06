@@ -8,7 +8,17 @@ on:
 
 jobs:
   build:
-    runs-on: macos-14
+    name: build (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - macos-14
+          - macos-15
+          - macos-15-intel
+          - macos-26
+          - macos-26-intel
     steps:
       - uses: actions/checkout@v4
 

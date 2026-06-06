@@ -21,8 +21,11 @@
 
 ## Phase 3: Product Quality
 
-- [ ] Add integration tests for multi-client connection behavior.
+- [x] Add regression tests for USB pipeline disconnect reconciliation.
+- [ ] Add integration tests for end-to-end multi-client connection behavior.
 - [x] Add packaging that does not overwrite upstream SideScreen.
-- [ ] Add release checks for macOS and Android artifacts.
+- [x] Add CI checks for macOS 14/15/26, Apple silicon, Intel, Android unit tests, Android lint, and ktlint.
+- [ ] Add signed and notarized release checks for macOS artifacts.
 - [ ] Add performance presets for common devices.
 - [x] Validate with Galaxy Tab S7 and Galaxy Z Fold 4.
+- [ ] Validate physical hardware on MacBook Air, Intel MacBook Pro, MacBook Neo, and more Android receivers.

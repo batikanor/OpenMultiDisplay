@@ -22,7 +22,7 @@ jobs:
         run: |
           cd AndroidClient
           chmod +x gradlew
-          ./gradlew testDebugUnitTest assembleDebug
+          ./gradlew testDebugUnitTest lintDebug assembleDebug
 
       - name: Lint
         run: |

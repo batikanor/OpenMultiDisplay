@@ -44,4 +44,15 @@ final class USBPipelineReconcilerTests: XCTestCase {
         XCTAssertEqual(result.disconnectedSerials, [])
         XCTAssertEqual(result.remainingSerials, ["tablet"])
     }
+
+    func testDuplicateConnectedSerialsAreTreatedAsConnected() {
+        let result = USBPipelineReconciler.reconcile(
+            activeSerials: ["tablet", "phone"],
+            connectedSerials: ["tablet", "tablet", "phone"]
+        )
+
+        XCTAssertEqual(result.disconnectedSerials, [])
+        XCTAssertEqual(result.remainingSerials, ["phone", "tablet"])
+        XCTAssertFalse(result.allPipelinesDisconnected)
+    }
 }

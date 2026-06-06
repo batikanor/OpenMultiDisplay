@@ -1,42 +1,56 @@
 # Support Matrix
 
-OpenMultiDisplay is developed as a macOS 14+ host application plus an Android 8.0+
-receiver. The macOS host is a universal Swift executable, so the intended Mac
-host support is both Apple silicon and Intel Mac laptops that can run macOS 14
-or newer.
+OpenMultiDisplay is a macOS 14+ host application with an Android receiver. The host is built as a universal Swift executable for Apple silicon and Intel, but support claims are split into three proof levels:
 
-Official Apple compatibility references:
+| Proof level | Meaning |
+| --- | --- |
+| Official OS eligibility | The laptop model appears in Apple's compatibility list for macOS 14 Sonoma, macOS 15 Sequoia, or macOS 26 Tahoe. |
+| CI validation | GitHub Actions builds and tests the project on the listed macOS runner label. |
+| Physical validation | The host streamed real USB displays on the local development hardware listed below. |
 
-- macOS Sonoma 14: <https://support.apple.com/en-mt/105113>
-- macOS Sequoia 15: <https://support.apple.com/en-us/120282>
-- macOS Tahoe 26: <https://support.apple.com/en-us/122867>
+Sources checked on June 6, 2026:
+
+- Apple: [macOS Sonoma compatibility](https://support.apple.com/en-us/105113).
+- Apple: [macOS Sequoia compatibility](https://support.apple.com/en-us/120282).
+- Apple: [macOS Tahoe compatibility](https://support.apple.com/en-us/122867).
+- GitHub: [GitHub-hosted runners reference](https://docs.github.com/en/actions/reference/runners/github-hosted-runners).
+- Android: [`<uses-sdk>` and API levels](https://developer.android.com/guide/topics/manifest/uses-sdk-element).
+- Android: [Android Debug Bridge](https://developer.android.com/tools/adb).
+- Android: [Supported media formats](https://developer.android.com/media/platform/supported-formats).
 
 ## Mac Laptop Support
 
-OpenMultiDisplay's host target is macOS 14 or newer. A Mac laptop is treated as
-supported when Apple officially supports that laptop on macOS 14 Sonoma,
-macOS 15 Sequoia, or macOS 26 Tahoe and the machine has enough CPU/GPU headroom
-for one capture and encoder pipeline per Android receiver.
+OpenMultiDisplay treats a Mac laptop as eligible when it can run macOS 14 or newer according to Apple, has Screen Recording permission for the host app, and has enough CPU/GPU headroom for one capture/encode pipeline per Android receiver.
 
-| Laptop type | Versions treated as supported | Why |
-| --- | --- | --- |
-| MacBook Pro on macOS 14 Sonoma | MacBook Pro 2018 and later, including 2018 13-inch/15-inch, 2019 13-inch/15-inch/16-inch, 2020 13-inch Intel, 2020 13-inch M1, 2021 14-inch/16-inch, 2022 13-inch M2, and 2023 14-inch/16-inch models. | Apple lists these MacBook Pro models as Sonoma-compatible, and Sonoma satisfies OpenMultiDisplay's macOS 14+ host target. |
-| MacBook Pro on macOS 15 Sequoia | MacBook Pro 2018 and later, including the 2024 14-inch/16-inch models listed by Apple. | Apple lists MacBook Pro 2018 and later for Sequoia. This is the broadest official current laptop path for Intel MacBook Pro support. |
-| MacBook Pro on macOS 26 Tahoe | MacBook Pro 16-inch 2019; 13-inch 2020 with Four Thunderbolt 3 ports; 13-inch M1 2020; 14-inch/16-inch 2021; 13-inch M2 2022; 14-inch/16-inch 2023; 14-inch/16-inch 2024; and 14-inch M5. | Apple lists this narrower set for Tahoe. Earlier 2018 MacBook Pro models and several Intel 2019/2020 variants remain supported only on Sonoma/Sequoia for this project. |
-| MacBook Air on macOS 14 Sonoma | MacBook Air Retina 13-inch 2018, 2019, and 2020; MacBook Air M1 2020; MacBook Air M2 2022; MacBook Air 15-inch M2 2023; and MacBook Air 13-inch/15-inch M3 2024. | Apple lists these MacBook Air models as Sonoma-compatible. These are supported when running macOS 14 or newer. |
-| MacBook Air on macOS 15 Sequoia | MacBook Air Retina 13-inch 2020; MacBook Air M1 2020; MacBook Air M2 2022; MacBook Air 15-inch M2 2023; MacBook Air 13-inch/15-inch M3 2024; and MacBook Air 13-inch/15-inch M4 2025. | Apple lists MacBook Air 2020 and later for Sequoia. This drops the 2018 and 2019 Intel MacBook Air models from the Sequoia path. |
-| MacBook Air on macOS 26 Tahoe | MacBook Air M1 2020, M2 2022, 15-inch M2 2023, 13-inch/15-inch M3 2024, and 13-inch/15-inch M4 2025. | Apple lists Apple-silicon MacBook Air models for Tahoe. Intel MacBook Air models are not in Apple's Tahoe laptop list. |
-| MacBook Neo on macOS 26 Tahoe | MacBook Neo 13-inch with A18 Pro. | Apple lists this laptop for Tahoe. It should meet the OS requirement, but it is not physically tested in this repository. |
-| 12-inch MacBook | Not supported. | Apple's Sonoma, Sequoia, and Tahoe compatibility lists do not include 12-inch MacBook models, and OpenMultiDisplay's host target is macOS 14+. |
+| Laptop family | macOS 14 Sonoma | macOS 15 Sequoia | macOS 26 Tahoe | OpenMultiDisplay status |
+| --- | --- | --- | --- | --- |
+| MacBook Pro | Apple lists 2018 and later MacBook Pro models, including the 2018 13-inch/15-inch models through 2023 models. | Apple lists 2018 and later MacBook Pro models, adding the 2024 14-inch/16-inch models. | Apple lists MacBook Pro (14-inch, M5), 2024 14-inch/16-inch, 2023 14-inch/16-inch, 13-inch M2 2022, 2021 14-inch/16-inch, 13-inch M1 2020, 13-inch 2020 with Four Thunderbolt 3 ports, and 16-inch 2019. | Eligible on the listed Apple-supported OS versions. Physically validated on MacBook Pro `Mac16,8` with Apple M4 Pro. |
+| MacBook Air | Apple lists MacBook Air 2018 and later, including Retina 13-inch 2018/2019/2020, M1 2020, M2 2022, 15-inch M2 2023, and 13-inch/15-inch M3 2024. | Apple lists MacBook Air Retina 13-inch 2020 and later, including M1 2020, M2 2022/2023, M3 2024, and M4 2025 models. | Apple lists Apple-silicon MacBook Air models: M1 2020, M2 2022, 15-inch M2 2023, M3 2024, and M4 2025. | Eligible on the listed Apple-supported OS versions. Not physically tested yet in this repository. |
+| MacBook Neo | Not listed by Apple for Sonoma. | Not listed by Apple for Sequoia. | Apple lists MacBook Neo (13-inch, A18 Pro). | Eligible only on Tahoe by Apple's current list. Not physically tested yet in this repository. |
+| 12-inch MacBook | Not listed by Apple for Sonoma. | Not listed by Apple for Sequoia. | Not listed by Apple for Tahoe. | Not supported because it cannot run the project's macOS 14+ host target through Apple's official compatibility path. |
 
-## Practical Requirements
+## CI-Covered macOS Hosts
 
-- macOS 14 or newer.
-- Screen Recording permission for the macOS host app.
-- Android platform-tools / `adb` for USB mode.
-- Android receiver with USB debugging enabled and authorized.
-- H.265 decode support on the Android receiver.
-- Enough host GPU/CPU headroom for one capture and encoder pipeline per Android device.
+The macOS CI matrix uses GitHub's official standard hosted runner labels:
+
+| Runner label | OS family | CPU architecture | What it proves |
+| --- | --- | --- | --- |
+| `macos-14` | macOS 14 | Apple silicon arm64 | Swift tests, release build, and lint pass on Sonoma-era arm64 runner. |
+| `macos-15` | macOS 15 | Apple silicon arm64 | Swift tests, release build, and lint pass on Sequoia-era arm64 runner. |
+| `macos-15-intel` | macOS 15 | Intel x64 | Swift tests, release build, and lint pass on an Intel macOS runner. |
+| `macos-26` | macOS 26 | Apple silicon arm64 | Swift tests, release build, and lint pass on Tahoe-era arm64 runner. |
+| `macos-26-intel` | macOS 26 | Intel x64 | Swift tests, release build, and lint pass on an Intel Tahoe runner. |
+
+CI cannot prove physical USB behavior because GitHub-hosted runners do not attach Android devices. Physical USB validation is listed separately below.
+
+## Android Receiver Support
+
+| Requirement | Reason |
+| --- | --- |
+| Android 8.0 / API 26 or newer | The Gradle project sets `minSdk = 26`; Android's API-level documentation maps API 26 to Android 8.0. |
+| Authorized USB debugging | USB mode uses ADB and `adb reverse` per Android serial. |
+| H.265 / HEVC decode | The host streams H.265 video. Android's media documentation lists HEVC as a supported media format, but device performance still depends on the receiver's codec implementation. |
+| Enough display/decode performance | Higher resolution, HiDPI, refresh rate, and bitrate increase decode load and USB bandwidth. |
 
 ## Development System
 
@@ -51,18 +65,19 @@ Captured from the development machine on June 6, 2026:
 | CPU | 14 cores: 10 performance, 4 efficiency |
 | GPU | Apple M4 Pro, 20 cores, Metal 4 |
 | Memory | 48 GB |
+| Built-in display | 3024 x 1964 Retina |
 | macOS | macOS 26.5.1, build 25F80 |
 | Kernel | Darwin 25.5.0 |
 | Xcode | Xcode 26.2, build 17C52 |
 | Swift | Apple Swift 6.2.3 |
 | ADB | Android Debug Bridge 1.0.41, version 37.0.0-14910828, installed at `/opt/homebrew/bin/adb` |
+| Optional local JDK | OpenJDK 17.0.19 at `/opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home` |
+| Android SDK env | `ANDROID_HOME` and `ANDROID_SDK_ROOT` were unset in the shell capture |
 
-During local validation, the forked host streamed two independent USB displays
-at the same time:
+Physical USB validation on this system:
 
-- Galaxy Tab S7, 1920 x 1200 @ 60 Hz.
-- Galaxy Z Fold 4, 1024 x 768 @ 60 Hz in the last captured system state.
-
-The Android Java runtime was not available from the shell during this capture,
-so Android build verification requires installing or selecting a JDK before
-running Gradle locally.
+| Receiver | Validated mode |
+| --- | --- |
+| Galaxy Tab S7 | Independent USB display at 1920 x 1200 @ 60 Hz. |
+| Galaxy Z Fold 4 | Independent USB display, last captured at 1024 x 768 @ 60 Hz. |
+| Two-device run | Galaxy Tab S7 and Galaxy Z Fold 4 connected simultaneously, with separate macOS displays instead of mirrored output. |

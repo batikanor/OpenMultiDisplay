@@ -1,45 +1,32 @@
 # OpenMultiDisplay
 
-OpenMultiDisplay is an MIT-licensed fork of [SideScreen](https://github.com/tranvuongquocdat/SideScreen) focused on making Android phones and tablets useful as USB-connected macOS displays.
+OpenMultiDisplay is an MIT-licensed fork of [SideScreen](https://github.com/tranvuongquocdat/SideScreen) that turns Android phones and tablets into USB-connected macOS displays.
 
-The immediate target is a MacBook with more than one Android receiver attached at the same time, for example a Galaxy Tab plus a Galaxy Z Fold.
+The fork is focused on true multi-device extended displays: one virtual macOS display, stream, encoder, and ADB reverse tunnel per Android device.
 
 ## Status
 
-This repository is early alpha.
+This repository is early alpha, but the USB multi-display path is working on the development hardware.
 
-What works in this fork:
-
-- macOS host builds on macOS 14+ with Swift Package Manager.
-- Android client keeps the upstream USB and wireless receiver flow.
-- USB setup now targets every authorized Android device by ADB serial.
-- The Mac streaming server no longer evicts the first receiver when another receiver connects.
-- USB mode creates one virtual display, capture pipeline, encoder, and local TCP server per connected Android device.
-- Android-side USB port stays stable at `54321`; each device maps to a unique Mac-side host port.
-- Per-device display profiles can set resolution, refresh rate, bitrate, quality, HiDPI, rotation, and arrangement position by ADB serial.
-- The macOS settings window includes a USB device profile editor for connected Android devices.
-- The multi-device USB path has been validated locally with a Galaxy Tab S7 and a Galaxy Z Fold 4 connected at the same time.
-
-What is still in progress:
-
-- Release signing, notarization, and production packaging.
-- More device presets and longer-duration soak testing.
-
-## Why This Fork Exists
-
-Upstream SideScreen is designed around one active Android receiver. That is enough for a tablet-as-monitor workflow, but it does not cover multi-device desk setups. OpenMultiDisplay keeps the upstream foundation and extends it toward multi-receiver USB operation.
+| Area | Current state |
+| --- | --- |
+| USB multi-display | Working with two authorized Android devices at once. |
+| Independent displays | Each USB receiver gets its own virtual display and Mac-side stream. |
+| Per-device controls | Profiles can set resolution, refresh rate, bitrate, quality, HiDPI, rotation, and arrangement position by ADB serial. |
+| Wireless mode | Kept from upstream as the single-display path. |
+| Packaging | App identity is separate from upstream SideScreen; production signing and notarization are still pending. |
 
 ## Requirements
 
 | Component | Requirement |
 | --- | --- |
 | macOS host | macOS 14 Sonoma or newer |
-| Android receiver | Android 8.0 or newer with H.265 hardware decode |
-| USB mode | Android platform-tools / `adb`, USB debugging enabled |
-| Build tools | Swift 5.9+, Xcode command line tools, Android Studio or JDK/Android SDK |
+| Android receiver | Android 8.0 / API 26 or newer |
+| USB mode | Android platform-tools / `adb`, USB debugging enabled, authorized device |
+| Video decode | H.265 / HEVC decode support on the Android receiver |
+| Build tools | Xcode command line tools, Swift, Android Studio or Android SDK/JDK |
 
-See [docs/SUPPORT.md](docs/SUPPORT.md) for the MacBook Air / MacBook Pro
-support matrix, Apple compatibility sources, and the development machine specs.
+Detailed compatibility, official references, and the development system specs are in [docs/SUPPORT.md](docs/SUPPORT.md).
 
 ## Build
 
@@ -55,73 +42,18 @@ Android receiver:
 
 ```bash
 cd AndroidClient
-./gradlew testDebugUnitTest
-./gradlew assembleDebug
+./gradlew testDebugUnitTest lintDebug assembleDebug
 ```
 
-Helper scripts are available under `scripts/`, but the Swift and Gradle commands above are the canonical development entry points. Run the unit tests before opening a pull request.
+## Project Docs
 
-## USB Development Flow
-
-1. Enable Developer Options and USB debugging on each Android device.
-2. Connect the devices by USB.
-3. Confirm every device is authorized:
-
-```bash
-adb devices -l
-```
-
-4. Build and start the Mac host.
-5. Launch OpenMultiDisplay on each Android device and use the USB tab.
-
-The Mac host configures:
-
-```bash
-adb -s <serial-a> reverse tcp:54321 tcp:54321
-adb -s <serial-b> reverse tcp:54321 tcp:54322
-```
-
-for authorized Android devices. Android keeps connecting to `127.0.0.1:54321`; the Mac receives each physical device on a different local port.
-
-## Per-Device Display Profiles
-
-USB display profiles live at:
-
-```text
-~/.openmultidisplay/devices.json
-```
-
-Each key is an ADB serial. Example:
-
-```json
-{
-  "devices": {
-    "R52N718E7NY": {
-      "name": "Galaxy Tab S7",
-      "width": 1920,
-      "height": 1200,
-      "refreshRate": 60,
-      "bitrate": 1000,
-      "quality": "ultralow",
-      "hiDPI": false,
-      "rotation": 0
-    }
-  }
-}
-```
-
-If the file does not exist, the Mac host writes a starter profile for the connected devices on first USB start.
-
-## Architecture
-
-In USB mode the host runs one pipeline per Android device:
-
-```text
-Android device A -> ADB reverse port A -> virtual display A -> capture A -> encoder A
-Android device B -> ADB reverse port B -> virtual display B -> capture B -> encoder B
-```
-
-See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) and [docs/ROADMAP.md](docs/ROADMAP.md).
+| Document | Purpose |
+| --- | --- |
+| [docs/USB.md](docs/USB.md) | USB setup, ADB reverse mapping, device profiles, disconnect behavior, troubleshooting. |
+| [docs/SUPPORT.md](docs/SUPPORT.md) | MacBook Air/Pro/Neo support matrix, Android requirements, official citations, development machine specs. |
+| [docs/TESTING.md](docs/TESTING.md) | Automated CI matrix, local validation commands, physical hardware validation, remaining gaps. |
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Host/client pipeline structure and design constraints. |
+| [docs/ROADMAP.md](docs/ROADMAP.md) | Product-quality milestones and remaining work. |
 
 ## Attribution
 

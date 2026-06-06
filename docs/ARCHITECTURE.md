@@ -48,6 +48,7 @@ Each `DisplayPipeline` owns:
 - macOS needs separate virtual displays for true extended-desktop behavior.
 - Touch input must map back to the owning virtual display, not a global display.
 - Per-device display profiles are keyed by ADB serial and loaded from `~/.openmultidisplay/devices.json`.
+- USB device refresh reconciles active pipeline serials against currently authorized ADB serials. A missing serial stops only that device's pipeline; losing every serial stops USB mode.
 
 ## Open Questions
 
