@@ -61,7 +61,7 @@ class QRScannerActivity : AppCompatActivity() {
         }, ContextCompat.getMainExecutor(this))
     }
 
-    @ExperimentalGetImage
+    @OptIn(ExperimentalGetImage::class)
     private fun analyze(proxy: ImageProxy) {
         val mediaImage = proxy.image
         if (mediaImage == null || alreadyDelivered) {
