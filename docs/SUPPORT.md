@@ -72,7 +72,7 @@ Captured from the development machine on June 6, 2026:
 | Swift | Apple Swift 6.2.3 |
 | ADB | Android Debug Bridge 1.0.41, version 37.0.0-14910828, installed at `/opt/homebrew/bin/adb` |
 | Optional local JDK | OpenJDK 17.0.19 at `/opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home` |
-| Android SDK env | `ANDROID_HOME` and `ANDROID_SDK_ROOT` were unset in the shell capture |
+| Android SDK | API 34 and build-tools 34.0.0 installed at `~/.local/android` for local validation; `ANDROID_HOME` and `ANDROID_SDK_ROOT` are supplied explicitly when running Gradle |
 
 Physical USB validation on this system:
 

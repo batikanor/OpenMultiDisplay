@@ -27,7 +27,7 @@ cd AndroidClient
 ./gradlew testDebugUnitTest lintDebug assembleDebug
 ```
 
-The Android command requires a valid local Android SDK through `ANDROID_HOME`, `ANDROID_SDK_ROOT`, or `AndroidClient/local.properties`. If the local shell has no SDK selected, use the Android GitHub Actions workflow as the SDK-backed validation source.
+The Android command requires a valid local Android SDK through `ANDROID_HOME`, `ANDROID_SDK_ROOT`, or `AndroidClient/local.properties`. The June 6, 2026 local validation used SDK API 34 and build-tools 34.0.0 at `~/.local/android`.
 
 ```bash
 git diff --check

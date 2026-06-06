@@ -144,7 +144,7 @@
             android:layout_height="24dp"
             android:layout_gravity="center"
             android:src="@drawable/ic_settings"
-            android:tint="#FFFFFF" />
+            app:tint="#FFFFFF" />
     </androidx.cardview.widget.CardView>
 
     <!-- Modern Connection Panel -->
