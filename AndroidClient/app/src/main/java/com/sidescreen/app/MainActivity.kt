@@ -1083,7 +1083,7 @@ class MainActivity : AppCompatActivity() {
                 val errorMessage =
                     when {
                         e.message?.contains("ECONNREFUSED") == true -> {
-                            "Mac server is not running.\n\nPlease start Side Screen.app on your Mac first."
+                            "Mac server is not running.\n\nPlease start SideScreen Multi on your Mac first."
                         }
 
                         e.message?.contains("Network is unreachable") == true -> {
@@ -1097,7 +1097,7 @@ class MainActivity : AppCompatActivity() {
 
                         else -> {
                             "Connection failed: ${e.message}\n\n" +
-                                "Try:\n• Start Side Screen.app on Mac\n" +
+                                "Try:\n• Start SideScreen Multi on Mac\n" +
                                 "• Check USB connection\n• Run: adb reverse tcp:$port tcp:$port"
                         }
                     }
@@ -1369,7 +1369,7 @@ class MainActivity : AppCompatActivity() {
     /**
      * Check if Mac server is actually running (not just ADB reverse)
      *
-     * Problem: When `adb reverse tcp:8888 tcp:8888` is active, ADB daemon listens on port 8888.
+     * Problem: When `adb reverse tcp:<port> tcp:<port>` is active, ADB daemon listens on that port.
      * A simple socket connect will succeed to ADB daemon, not the actual Mac server.
      *
      * Solution: After connecting, try to read data with a short timeout.

@@ -1,37 +1,23 @@
 ---
 name: Feature Request
-about: Suggest an idea for Side Screen
+about: Suggest a SideScreen Multi improvement
 title: '[Feature] '
 labels: enhancement
 assignees: ''
 ---
 
-## Problem Statement
+## Problem
 
-A clear description of the problem you're trying to solve.
+What workflow should this improve?
 
-Example: "I'm always frustrated when..."
+## Proposal
 
-## Proposed Solution
+What should SideScreen Multi do?
 
-Describe the solution you'd like to see.
+## Devices
 
-## Use Case
+Which Mac and Android devices would this support?
 
-How would you use this feature? What workflow would it improve?
+## Alternatives
 
-## Alternatives Considered
-
-Have you considered any alternative solutions or workarounds?
-
-## Additional Context
-
-Add any other context, mockups, or screenshots about the feature request here.
-
-## Priority
-
-How important is this feature to you?
-
-- [ ] Nice to have
-- [ ] Important for my workflow
-- [ ] Critical / blocking my use
+What workarounds or other tools have you tried?

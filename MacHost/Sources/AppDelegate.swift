@@ -349,11 +349,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
             print("📱 Found ADB at: \(finalAdbPath)")
 
-            // Retry adb reverse up to 3 times — handles first-install authorization delay
-            for attempt in 1...3 {
+            func authorizedDevices() -> [String] {
                 let process = Process()
                 process.executableURL = URL(fileURLWithPath: finalAdbPath)
-                process.arguments = ["reverse", "tcp:\(port)", "tcp:\(port)"]
+                process.arguments = ["devices"]
 
                 let pipe = Pipe()
                 process.standardOutput = pipe
@@ -365,18 +364,64 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
                     let data = pipe.fileHandleForReading.readDataToEndOfFile()
                     let output = String(data: data, encoding: .utf8) ?? ""
-
-                    if process.terminationStatus == 0 {
-                        print("✅ ADB reverse setup successful: tcp:\(port) -> tcp:\(port)")
-                        return
-                    } else {
-                        print("⚠️  ADB reverse attempt \(attempt)/3 failed: \(output.trimmingCharacters(in: .whitespacesAndNewlines))")
-                        if attempt < 3 {
-                            try? await Task.sleep(nanoseconds: 1_000_000_000)
-                        }
+                    return output.split(separator: "\n").compactMap { line in
+                        let parts = line.split(separator: "\t").map(String.init)
+                        guard parts.count == 2, parts[1] == "device" else { return nil }
+                        return parts[0]
                     }
                 } catch {
-                    print("⚠️  Failed to run ADB (attempt \(attempt)/3): \(error.localizedDescription)")
+                    print("⚠️  Failed to list ADB devices: \(error.localizedDescription)")
+                    return []
+                }
+            }
+
+            let devices = authorizedDevices()
+            guard !devices.isEmpty else {
+                print("⚠️  No authorized Android USB devices found")
+                print("💡 Unlock each device and accept the USB debugging prompt")
+                return
+            }
+
+            print("📱 Authorized ADB device(s): \(devices.joined(separator: ", "))")
+
+            // Retry adb reverse up to 3 times — handles first-install authorization delay.
+            // Target every serial explicitly so two Android devices can attach at once.
+            for attempt in 1...3 {
+                var failedDevices: [String] = []
+
+                for serial in devices {
+                    let process = Process()
+                    process.executableURL = URL(fileURLWithPath: finalAdbPath)
+                    process.arguments = ["-s", serial, "reverse", "tcp:\(port)", "tcp:\(port)"]
+
+                    let pipe = Pipe()
+                    process.standardOutput = pipe
+                    process.standardError = pipe
+
+                    do {
+                        try process.run()
+                        process.waitUntilExit()
+
+                        let data = pipe.fileHandleForReading.readDataToEndOfFile()
+                        let output = String(data: data, encoding: .utf8) ?? ""
+
+                        if process.terminationStatus == 0 {
+                            print("✅ ADB reverse setup successful for \(serial): tcp:\(port) -> tcp:\(port)")
+                        } else {
+                            failedDevices.append(serial)
+                            print("⚠️  ADB reverse attempt \(attempt)/3 failed for \(serial): \(output.trimmingCharacters(in: .whitespacesAndNewlines))")
+                        }
+                    } catch {
+                        failedDevices.append(serial)
+                        print("⚠️  Failed to run ADB for \(serial) (attempt \(attempt)/3): \(error.localizedDescription)")
+                    }
+                }
+
+                if failedDevices.isEmpty {
+                    print("✅ ADB reverse setup complete for \(devices.count) device(s)")
+                    return
+                } else {
+                    print("⚠️  ADB reverse still pending for: \(failedDevices.joined(separator: ", "))")
                     if attempt < 3 {
                         try? await Task.sleep(nanoseconds: 1_000_000_000)
                     }
@@ -425,7 +470,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 height: size.height,
                 refreshRate: settings.refreshRate,
                 hiDPI: settings.hiDPI,
-                name: "SideScreen"
+                name: "SideScreen Multi"
             )
 
             // Disable mirror mode (may fail if already in extend mode)

@@ -12,7 +12,7 @@ echo "Building version $VERSION..."
 cd "$ROOT_DIR/MacHost"
 
 # Kill running instance
-echo "Stopping running Side Screen..."
+echo "Stopping running SideScreen Multi..."
 pkill -f SideScreen 2>/dev/null || true
 sleep 0.5
 
@@ -35,7 +35,7 @@ lipo -create \
   -output .build/release-universal/SideScreen
 
 # Create .app bundle
-APP_NAME="SideScreen"
+APP_NAME="SideScreen Multi"
 APP_DIR="$ROOT_DIR/$APP_NAME.app"
 
 echo "Creating app bundle..."
@@ -63,11 +63,11 @@ cat > "$APP_DIR/Contents/Info.plist" << EOF
     <key>CFBundleIconFile</key>
     <string>AppIcon</string>
     <key>CFBundleIdentifier</key>
-    <string>com.sidescreen.app</string>
+    <string>com.batikanor.sidescreenmulti</string>
     <key>CFBundleName</key>
-    <string>Side Screen</string>
+    <string>SideScreen Multi</string>
     <key>CFBundleDisplayName</key>
-    <string>Side Screen</string>
+    <string>SideScreen Multi</string>
     <key>CFBundleVersion</key>
     <string>$VERSION</string><!-- VERSION -->
     <key>CFBundleShortVersionString</key>
@@ -83,9 +83,9 @@ cat > "$APP_DIR/Contents/Info.plist" << EOF
     <key>NSSupportsAutomaticGraphicsSwitching</key>
     <true/>
     <key>NSScreenCaptureUsageDescription</key>
-    <string>Side Screen needs screen recording access to capture your virtual display and stream it to your Android device.</string>
+    <string>SideScreen Multi needs screen recording access to capture your virtual display and stream it to your Android device.</string>
     <key>NSLocalNetworkUsageDescription</key>
-    <string>Side Screen needs Local Network access so your Android tablet can connect to the Mac over WiFi for wireless mode. Without this, only USB-tethered connections work.</string>
+    <string>SideScreen Multi needs Local Network access so your Android tablet can connect to the Mac over WiFi for wireless mode. Without this, only USB-tethered connections work.</string>
     <key>NSBonjourServices</key>
     <array>
         <string>_sidescreen._tcp</string>
@@ -103,7 +103,7 @@ echo ""
 echo "Build successful!"
 echo ""
 echo "App: $ROOT_DIR/$APP_NAME.app"
-echo "To run: open $APP_NAME.app"
+echo "To run: open \"$APP_NAME.app\""
 
 # Create DMG with Applications symlink
 echo ""
@@ -111,7 +111,7 @@ echo "Creating DMG..."
 DMG_DIR=$(mktemp -d)
 cp -R "$APP_DIR" "$DMG_DIR/"
 ln -s /Applications "$DMG_DIR/Applications"
-DMG_PATH="$ROOT_DIR/SideScreen-${VERSION}-mac-universal.dmg"
-hdiutil create -volname "Side Screen" -srcfolder "$DMG_DIR" -ov -format UDZO "$DMG_PATH"
+DMG_PATH="$ROOT_DIR/SideScreenMulti-${VERSION}-mac-universal.dmg"
+hdiutil create -volname "SideScreen Multi" -srcfolder "$DMG_DIR" -ov -format UDZO "$DMG_PATH"
 rm -rf "$DMG_DIR"
 echo "DMG: $DMG_PATH"

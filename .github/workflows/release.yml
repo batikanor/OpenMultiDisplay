@@ -32,7 +32,7 @@ jobs:
       - name: Create .app bundle
         run: |
           VERSION=${{ steps.version.outputs.version }}
-          APP_DIR="SideScreen.app"
+          APP_DIR="SideScreen Multi.app"
           mkdir -p "$APP_DIR/Contents/MacOS"
           mkdir -p "$APP_DIR/Contents/Resources"
           cp MacHost/.build/release-universal/SideScreen "$APP_DIR/Contents/MacOS/"
@@ -52,11 +52,11 @@ jobs:
               <key>CFBundleIconFile</key>
               <string>AppIcon</string>
               <key>CFBundleIdentifier</key>
-              <string>com.sidescreen.app</string>
+              <string>com.batikanor.sidescreenmulti</string>
               <key>CFBundleName</key>
-              <string>Side Screen</string>
+              <string>SideScreen Multi</string>
               <key>CFBundleDisplayName</key>
-              <string>Side Screen</string>
+              <string>SideScreen Multi</string>
               <key>CFBundleVersion</key>
               <string>${VERSION}</string>
               <key>CFBundleShortVersionString</key>
@@ -72,9 +72,9 @@ jobs:
               <key>NSSupportsAutomaticGraphicsSwitching</key>
               <true/>
               <key>NSScreenCaptureUsageDescription</key>
-              <string>Side Screen needs screen recording access to capture your virtual display and stream it to your Android device.</string>
+              <string>SideScreen Multi needs screen recording access to capture your virtual display and stream it to your Android device.</string>
               <key>NSLocalNetworkUsageDescription</key>
-              <string>Side Screen needs Local Network access so your Android tablet can connect to the Mac over WiFi for wireless mode. Without this, only USB-tethered connections work.</string>
+              <string>SideScreen Multi needs Local Network access so your Android tablet can connect to the Mac over WiFi for wireless mode. Without this, only USB-tethered connections work.</string>
               <key>NSBonjourServices</key>
               <array>
                   <string>_sidescreen._tcp</string>
@@ -84,15 +84,15 @@ jobs:
           EOF
 
       - name: Ad-hoc code sign
-        run: codesign --force --deep --sign - SideScreen.app
+        run: codesign --force --deep --sign - "SideScreen Multi.app"
 
       - name: Create DMG
         run: |
           VERSION=${{ steps.version.outputs.version }}
           mkdir -p dmg-content
-          cp -R SideScreen.app dmg-content/
+          cp -R "SideScreen Multi.app" dmg-content/
           ln -s /Applications dmg-content/Applications
-          hdiutil create -volname "Side Screen" -srcfolder dmg-content -ov -format UDZO "SideScreen-${VERSION}-mac-universal.dmg"
+          hdiutil create -volname "SideScreen Multi" -srcfolder dmg-content -ov -format UDZO "SideScreenMulti-${VERSION}-mac-universal.dmg"
           rm -rf dmg-content
 
       - name: Upload DMG
@@ -125,7 +125,7 @@ jobs:
       - name: Rename APK
         run: |
           VERSION=${{ steps.version.outputs.version }}
-          cp AndroidClient/app/build/outputs/apk/release/app-release.apk "SideScreen-${VERSION}-android.apk"
+          cp AndroidClient/app/build/outputs/apk/release/app-release.apk "SideScreenMulti-${VERSION}-android.apk"
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
@@ -167,7 +167,7 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          name: "Side Screen v${{ steps.version.outputs.version }}"
+          name: "SideScreen Multi v${{ steps.version.outputs.version }}"
           body: |
             ## What's Changed
             ${{ steps.changelog.outputs.notes }}
@@ -175,11 +175,11 @@ jobs:
             ### Downloads
             | Platform | File |
             |----------|------|
-            | macOS (Universal) | `SideScreen-${{ steps.version.outputs.version }}-mac-universal.dmg` |
-            | Android | `SideScreen-${{ steps.version.outputs.version }}-android.apk` |
+            | macOS (Universal) | `SideScreenMulti-${{ steps.version.outputs.version }}-mac-universal.dmg` |
+            | Android | `SideScreenMulti-${{ steps.version.outputs.version }}-android.apk` |
 
             ### Installation
-            - **macOS**: Open DMG, drag to Applications. If Gatekeeper says "damaged": `sudo xattr -cr /Applications/SideScreen.app`
+            - **macOS**: Open DMG, drag to Applications. If Gatekeeper says "damaged": `sudo xattr -cr "/Applications/SideScreen Multi.app"`
             - **Android**: Install APK (enable "Unknown sources" if needed)
           files: |
             artifacts/macos-dmg/*.dmg

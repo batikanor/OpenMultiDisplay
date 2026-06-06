@@ -12,7 +12,7 @@ android {
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.sidescreen.app"
+        applicationId = "com.batikanor.sidescreenmulti"
         minSdk = 26
         targetSdk = 34
         versionCode = computedVersionCode

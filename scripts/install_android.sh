@@ -14,24 +14,30 @@ if [ ! -f "$APK_PATH" ]; then
 fi
 
 # Check ADB connection
-if ! adb devices | grep -q "device$"; then
+DEVICES=$(adb devices | awk '/\tdevice$/ {print $1}')
+if [ -z "$DEVICES" ]; then
     echo "❌ No Android device found via ADB"
     echo "   Please connect your device via USB and enable USB debugging"
     exit 1
 fi
 
 # Install APK
-adb install -r "$APK_PATH"
+for serial in $DEVICES; do
+    echo "Installing on $serial..."
+    adb -s "$serial" install -r "$APK_PATH"
+done
 
 echo ""
 echo "✅ App installed successfully!"
 echo ""
 echo "📲 Setting up USB port forwarding..."
-adb reverse --remove tcp:8888 2>/dev/null || true
-adb reverse tcp:8888 tcp:8888
+for serial in $DEVICES; do
+    adb -s "$serial" reverse --remove tcp:54321 2>/dev/null || true
+    adb -s "$serial" reverse tcp:54321 tcp:54321
+done
 
-echo "✅ Port 8888 forwarded"
+echo "✅ Port 54321 forwarded"
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "Ready! Open 'Side Screen' on your Android device"
+echo "Ready! Open 'SideScreen Multi' on your Android device"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"

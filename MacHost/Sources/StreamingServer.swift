@@ -28,12 +28,29 @@ private extension NWEndpoint {
     }
 }
 
+private final class ClientSession {
+    let id = UUID()
+    let connection: NWConnection
+    var isReceiving = false
+    var connectionReady = false
+    var waitingForSyncFrame = true
+    var clientSupportsFrameMetadata = false
+    var inputBuffer = Data()
+
+    init(connection: NWConnection) {
+        self.connection = connection
+    }
+}
+
 class StreamingServer {
     private let port: UInt16
     private var listener: NWListener?
-    private var connection: NWConnection?
+    private var clients: [UUID: ClientSession] = [:]
+    private let clientsLock = NSLock()
+
     var onClientConnected: (() -> Void)?
     var onClientDisconnected: (() -> Void)?
+    var onClientCountChanged: ((Int) -> Void)?
     // Touch callback: (x1, y1, action, pointerCount, x2, y2)
     var onTouchEvent: ((Float, Float, Int, Int, Float, Float) -> Void)?
     var onStats: ((Double, Double) -> Void)?
@@ -45,7 +62,7 @@ class StreamingServer {
 
     // Wireless auth: when non-nil, non-loopback connections must present this
     // 32-byte token before being allowed to proceed. nil means wireless mode
-    // is inactive — non-loopback connections are rejected immediately.
+    // is inactive, so non-loopback connections are rejected immediately.
     var expectedAuthToken: Data?
     var onWirelessClientPaired: ((String) -> Void)?
 
@@ -59,12 +76,7 @@ class StreamingServer {
     private var displayWidth = 1920
     private var displayHeight = 1080
     private var rotation = 0
-    private var isReceiving = false
     private var isStopped = false
-    private var connectionReady = false
-    private var waitingForSyncFrame = false
-    private var clientSupportsFrameMetadata = false
-    private var inputBuffer = Data()
 
     init(port: UInt16) {
         self.port = port
@@ -76,9 +88,9 @@ class StreamingServer {
             let params = NWParameters.tcp
             params.allowLocalEndpointReuse = true
 
-            // Optimize TCP for low-latency streaming
+            // Optimize TCP for low-latency streaming.
             if let tcpOptions = params.defaultProtocolStack.transportProtocol as? NWProtocolTCP.Options {
-                tcpOptions.noDelay = true  // Disable Nagle's algorithm
+                tcpOptions.noDelay = true
                 tcpOptions.enableFastOpen = true
             }
 
@@ -108,128 +120,121 @@ class StreamingServer {
     private func handleConnection(_ newConnection: NWConnection) {
         debugLog("New connection incoming...")
 
-        // Clean up old connection properly
-        if let oldConnection = connection {
-            isReceiving = false
-            oldConnection.cancel()
-        }
+        let session = ClientSession(connection: newConnection)
+        addClient(session)
 
-        connectionReady = false
-        clientSupportsFrameMetadata = false
-        waitingForSyncFrame = true
-        inputBuffer.removeAll(keepingCapacity: true)
-        connection = newConnection
-        droppedFrames = 0
-
-        connection?.stateUpdateHandler = { [weak self] state in
+        newConnection.stateUpdateHandler = { [weak self, weak session] state in
+            guard let self, let session else { return }
             debugLog("Connection state: \(state)")
             switch state {
             case .ready:
-                self?.onConnectionReady(newConnection)
+                self.onConnectionReady(session)
             case .failed(let error):
                 debugLog("Connection failed: \(error)")
-                self?.onClientDisconnected?()
+                self.removeClient(session, reason: "failed")
             case .cancelled:
                 debugLog("Connection cancelled")
-                self?.onClientDisconnected?()
+                self.removeClient(session, reason: "cancelled")
             default:
                 break
             }
         }
 
-        connection?.start(queue: networkQueue)
+        newConnection.start(queue: networkQueue)
     }
 
-    private func onConnectionReady(_ conn: NWConnection) {
-        if conn.endpoint.isLoopback {
-            debugLog("Client connected via loopback (USB) — skipping auth")
-            beginExistingProtocol(on: conn)
+    private func onConnectionReady(_ session: ClientSession) {
+        if session.connection.endpoint.isLoopback {
+            debugLog("Client connected via loopback (USB) - skipping auth")
+            beginExistingProtocol(on: session)
             return
         }
         guard let expected = expectedAuthToken else {
             debugLog("Rejecting non-loopback client: wireless mode not active")
-            conn.cancel()
+            session.connection.cancel()
             return
         }
-        debugLog("Client connected via LAN — running auth handshake")
-        runAuthHandshake(connection: conn, expectedToken: expected)
+        debugLog("Client connected via LAN - running auth handshake")
+        runAuthHandshake(session: session, expectedToken: expected)
     }
 
-    private func beginExistingProtocol(on conn: NWConnection) {
-        startReceivingTouch()
+    private func beginExistingProtocol(on session: ClientSession) {
+        startReceivingTouch(from: session)
 
         // Give new clients a short chance to opt in before the first frame.
         // Legacy clients send no capability message, so we continue shortly
         // after this window with the old frame type.
-        networkQueue.asyncAfter(deadline: .now() + .milliseconds(100)) { [weak self, weak conn] in
-            guard let self = self, let conn = conn else { return }
-            self.finishProtocolStartup(on: conn)
+        networkQueue.asyncAfter(deadline: .now() + .milliseconds(100)) { [weak self, weak session] in
+            guard let self, let session else { return }
+            self.finishProtocolStartup(on: session)
         }
     }
 
-    private func finishProtocolStartup(on conn: NWConnection) {
-        guard connection === conn, !isStopped, !connectionReady else { return }
+    private func finishProtocolStartup(on session: ClientSession) {
+        guard containsClient(session), !isStopped, !session.connectionReady else { return }
 
         debugLog("Client connected - sending display config first")
-        sendDisplaySize()
-        connectionReady = true
-        debugLog("Connection ready for frames (metadata=\(clientSupportsFrameMetadata ? "on" : "off"))")
+        sendDisplaySize(to: session)
+        session.connectionReady = true
+        debugLog("Connection ready for frames (metadata=\(session.clientSupportsFrameMetadata ? "on" : "off")); clients=\(clientCount)")
         onClientConnected?()
+        onClientCountChanged?(clientCount)
     }
 
-    private func runAuthHandshake(connection conn: NWConnection, expectedToken: Data) {
+    private func runAuthHandshake(session: ClientSession, expectedToken: Data) {
+        let conn = session.connection
         // Read fixed prefix [magic 4][token 32][name_len 1] = 37 bytes.
         conn.receive(minimumIncompleteLength: HandshakeCodec.fixedPrefixLen,
-                     maximumLength: HandshakeCodec.fixedPrefixLen) { [weak self] prefixData, _, _, error in
-            guard let self = self else { return }
+                     maximumLength: HandshakeCodec.fixedPrefixLen) { [weak self, weak session] prefixData, _, _, error in
+            guard let self, let session else { return }
             if let error = error {
                 debugLog("Auth read error: \(error)")
-                conn.cancel()
+                session.connection.cancel()
                 return
             }
             guard let prefix = prefixData, prefix.count == HandshakeCodec.fixedPrefixLen else {
-                self.sendAuthResponse(conn, status: .invalidMagic, thenClose: true)
+                self.sendAuthResponse(session.connection, status: .invalidMagic, thenClose: true)
                 return
             }
             let prefixBytes = Array(prefix)
             guard Array(prefixBytes[0..<4]) == HandshakeCodec.requestMagic else {
-                self.sendAuthResponse(conn, status: .invalidMagic, thenClose: true)
+                self.sendAuthResponse(session.connection, status: .invalidMagic, thenClose: true)
                 return
             }
             let nameLen = Int(prefixBytes[36])
             guard (1...64).contains(nameLen) else {
-                self.sendAuthResponse(conn, status: .invalidName, thenClose: true)
+                self.sendAuthResponse(session.connection, status: .invalidName, thenClose: true)
                 return
             }
             // Read variable name.
-            conn.receive(minimumIncompleteLength: nameLen, maximumLength: nameLen) { nameData, _, _, error in
+            session.connection.receive(minimumIncompleteLength: nameLen, maximumLength: nameLen) { nameData, _, _, error in
                 if let error = error {
                     debugLog("Auth name read error: \(error)")
-                    conn.cancel()
+                    session.connection.cancel()
                     return
                 }
                 guard let nameData = nameData, nameData.count == nameLen else {
-                    self.sendAuthResponse(conn, status: .invalidName, thenClose: true)
+                    self.sendAuthResponse(session.connection, status: .invalidName, thenClose: true)
                     return
                 }
                 let full = prefix + nameData
                 do {
                     let parsed = try HandshakeCodec.parseRequest(full)
                     if WirelessAuth.validate(parsed.token, expected: expectedToken) {
-                        debugLog("Wireless auth OK — device: \(parsed.deviceName)")
-                        self.sendAuthResponse(conn, status: .ok, thenClose: false)
+                        debugLog("Wireless auth OK - device: \(parsed.deviceName)")
+                        self.sendAuthResponse(session.connection, status: .ok, thenClose: false)
                         self.onWirelessClientPaired?(parsed.deviceName)
-                        self.beginExistingProtocol(on: conn)
+                        self.beginExistingProtocol(on: session)
                     } else {
                         debugLog("Wireless auth rejected: token mismatch")
-                        self.sendAuthResponse(conn, status: .invalidToken, thenClose: true)
+                        self.sendAuthResponse(session.connection, status: .invalidToken, thenClose: true)
                     }
                 } catch HandshakeError.invalidMagic {
-                    self.sendAuthResponse(conn, status: .invalidMagic, thenClose: true)
+                    self.sendAuthResponse(session.connection, status: .invalidMagic, thenClose: true)
                 } catch HandshakeError.invalidName {
-                    self.sendAuthResponse(conn, status: .invalidName, thenClose: true)
+                    self.sendAuthResponse(session.connection, status: .invalidName, thenClose: true)
                 } catch {
-                    self.sendAuthResponse(conn, status: .invalidMagic, thenClose: true)
+                    self.sendAuthResponse(session.connection, status: .invalidMagic, thenClose: true)
                 }
             }
         }
@@ -251,85 +256,91 @@ class StreamingServer {
         self.rotation = rotation
     }
 
-    /// Update rotation and send to connected client
+    /// Update rotation and send to connected clients.
     func updateRotation(_ rotation: Int) {
         self.rotation = rotation
-        sendDisplaySize() // Re-send display config with new rotation
+        sendDisplaySize()
     }
 
     func sendDisplaySize() {
-        guard let connection = connection else { return }
+        for session in snapshotClients() where session.connectionReady {
+            sendDisplaySize(to: session)
+        }
+    }
 
+    private func sendDisplaySize(to session: ClientSession) {
         var data = Data()
-        data.append(WireMessage.displayConfig) // Type: Display size + rotation
+        data.append(WireMessage.displayConfig)
         data.append(contentsOf: withUnsafeBytes(of: Int32(displayWidth).bigEndian) { Data($0) })
         data.append(contentsOf: withUnsafeBytes(of: Int32(displayHeight).bigEndian) { Data($0) })
         data.append(contentsOf: withUnsafeBytes(of: Int32(rotation).bigEndian) { Data($0) })
 
-        connection.send(content: data, completion: .contentProcessed { _ in })
-        debugLog("Sent display config: \(displayWidth)x\(displayHeight) @ \(rotation)°")
+        session.connection.send(content: data, completion: .contentProcessed { _ in })
+        debugLog("Sent display config to \(session.id): \(displayWidth)x\(displayHeight) @ \(rotation)deg")
     }
 
-    private func startReceivingTouch() {
-        guard !isReceiving else {
-            debugLog("Already receiving touch events")
+    private func startReceivingTouch(from session: ClientSession) {
+        guard !session.isReceiving else {
+            debugLog("Already receiving input for client \(session.id)")
             return
         }
-        isReceiving = true
-        debugLog("Starting input receive loop... (touch=\(touchEnabled ? "on" : "off"))")
+        session.isReceiving = true
+        debugLog("Starting input receive loop for client \(session.id)... (touch=\(touchEnabled ? "on" : "off"))")
 
-        // Use loop-based pattern instead of recursion to prevent stack overflow
-        receiveQueue.async { [weak self] in
-            self?.touchReceiveLoop()
+        receiveQueue.async { [weak self, weak session] in
+            guard let self, let session else { return }
+            self.touchReceiveLoop(for: session)
         }
     }
 
-    private func touchReceiveLoop() {
-        guard let connection = connection, isReceiving, !isStopped else {
-            isReceiving = false
+    private func touchReceiveLoop(for session: ClientSession) {
+        guard containsClient(session), session.isReceiving, !isStopped else {
+            session.isReceiving = false
             return
         }
 
-        connection.receive(minimumIncompleteLength: 1, maximumLength: 256) { [weak self] data, _, isComplete, error in
-            guard let self = self, self.isReceiving, !self.isStopped else { return }
+        session.connection.receive(minimumIncompleteLength: 1, maximumLength: 256) { [weak self, weak session] data, _, isComplete, error in
+            guard let self, let session, session.isReceiving, !self.isStopped else { return }
 
             if error != nil || isComplete {
-                self.isReceiving = false
-                self.inputBuffer.removeAll(keepingCapacity: true)
+                session.isReceiving = false
+                session.inputBuffer.removeAll(keepingCapacity: true)
+                self.removeClient(session, reason: error.map { "receive error: \($0)" } ?? "receive complete")
                 return
             }
 
             if let data = data, !data.isEmpty {
-                self.inputBuffer.append(data)
-                self.processInputBuffer(connection: connection)
+                session.inputBuffer.append(data)
+                self.processInputBuffer(for: session)
             }
 
-            self.receiveQueue.async {
-                self.touchReceiveLoop()
+            self.receiveQueue.async { [weak self, weak session] in
+                guard let self, let session else { return }
+                self.touchReceiveLoop(for: session)
             }
         }
     }
 
-    private func processInputBuffer(connection: NWConnection) {
-        while let msgType = inputBuffer.first {
+    private func processInputBuffer(for session: ClientSession) {
+        while let msgType = session.inputBuffer.first {
             switch msgType {
             case WireMessage.touchEvent:
                 // Touch event: 1 type + 1 pointerCount + N*(4x+4y) + 4 action.
                 // 1 finger: 14 bytes, 2 fingers: 22 bytes.
-                guard inputBuffer.count >= 2 else { return }
+                guard session.inputBuffer.count >= 2 else { return }
 
-                let pointerCount = Int(inputByte(at: 1))
+                let pointerCount = Int(inputByte(in: session, at: 1))
                 guard pointerCount == 1 || pointerCount == 2 else {
                     debugLog("Invalid touch pointer count: \(pointerCount)")
-                    consumeInputBytes(1)
+                    consumeInputBytes(1, in: session)
                     continue
                 }
 
                 let expectedSize = 2 + pointerCount * 8 + 4
-                guard inputBuffer.count >= expectedSize else { return }
+                guard session.inputBuffer.count >= expectedSize else { return }
 
-                let message = Data(inputBuffer.prefix(expectedSize))
-                consumeInputBytes(expectedSize)
+                let message = Data(session.inputBuffer.prefix(expectedSize))
+                consumeInputBytes(expectedSize, in: session)
 
                 // Drop early if host has touch disabled, after consuming exactly
                 // this touch frame so coalesced ping/keyframe messages survive.
@@ -339,38 +350,38 @@ class StreamingServer {
 
             case WireMessage.ping:
                 // Ping from client: echo back as pong (type=5) with client's timestamp.
-                guard inputBuffer.count >= 9 else { return }
+                guard session.inputBuffer.count >= 9 else { return }
 
-                let clientTimestamp = Data(inputBuffer.dropFirst().prefix(8))
-                consumeInputBytes(9)
+                let clientTimestamp = Data(session.inputBuffer.dropFirst().prefix(8))
+                consumeInputBytes(9, in: session)
 
                 var pong = Data(capacity: 9)
-                pong.append(WireMessage.pong) // Type: Pong
+                pong.append(WireMessage.pong)
                 pong.append(clientTimestamp)
-                connection.send(content: pong, completion: .contentProcessed { _ in })
+                session.connection.send(content: pong, completion: .contentProcessed { _ in })
 
             case WireMessage.keyframeRequest:
                 // Keyframe request from Android decoder. The client sends a
                 // two-byte message: type + flags.
-                guard inputBuffer.count >= 2 else { return }
+                guard session.inputBuffer.count >= 2 else { return }
 
-                let flags = inputByte(at: 1)
-                consumeInputBytes(2)
+                let flags = inputByte(in: session, at: 1)
+                consumeInputBytes(2, in: session)
                 onKeyframeRequested?((flags & 1) != 0)
 
             case WireMessage.clientSupportsFrameMetadata:
                 // One-byte opt-in from newer clients. Keeping this payload-free
                 // lets older hosts safely ignore it without misaligning input.
-                consumeInputBytes(1)
-                if !clientSupportsFrameMetadata {
-                    clientSupportsFrameMetadata = true
-                    debugLog("Client supports video frame metadata")
+                consumeInputBytes(1, in: session)
+                if !session.clientSupportsFrameMetadata {
+                    session.clientSupportsFrameMetadata = true
+                    debugLog("Client \(session.id) supports video frame metadata")
                 }
-                finishProtocolStartup(on: connection)
+                finishProtocolStartup(on: session)
 
             default:
                 debugLog("Unknown client input type: \(msgType)")
-                consumeInputBytes(1)
+                consumeInputBytes(1, in: session)
             }
         }
     }
@@ -394,49 +405,60 @@ class StreamingServer {
         }
     }
 
-    private func inputByte(at offset: Int) -> UInt8 {
-        inputBuffer[inputBuffer.index(inputBuffer.startIndex, offsetBy: offset)]
+    private func inputByte(in session: ClientSession, at offset: Int) -> UInt8 {
+        session.inputBuffer[session.inputBuffer.index(session.inputBuffer.startIndex, offsetBy: offset)]
     }
 
-    private func consumeInputBytes(_ count: Int) {
-        let endIndex = inputBuffer.index(inputBuffer.startIndex, offsetBy: count)
-        inputBuffer.removeSubrange(inputBuffer.startIndex..<endIndex)
+    private func consumeInputBytes(_ count: Int, in session: ClientSession) {
+        let endIndex = session.inputBuffer.index(session.inputBuffer.startIndex, offsetBy: count)
+        session.inputBuffer.removeSubrange(session.inputBuffer.startIndex..<endIndex)
     }
 
     func sendFrame(_ data: Data, timestamp: UInt64, isKeyframe: Bool = false) {
-        guard let connection = connection, !isStopped, connectionReady else { return }
+        let readyClients = snapshotClients().filter { $0.connectionReady }
+        guard !isStopped, !readyClients.isEmpty else { return }
 
-        // With short-GOP encoding, a fresh client must start on a keyframe —
-        // sending P-frames before the first IDR would feed garbage to its decoder.
-        if waitingForSyncFrame {
-            guard isKeyframe else {
-                droppedFrames += 1
-                return
-            }
-            waitingForSyncFrame = false
-            debugLog("First keyframe sent to new client")
-        }
-
-        // No frame-age dropping or backpressure — send everything immediately.
-        // The encode queue depth limit (2 pending) in ScreenCapture handles flow control.
         frameQueue.async { [weak self] in
-            guard let self = self else { return }
+            guard let self else { return }
+            var deliveredClients = 0
 
-            let packet = self.makeFramePacket(data, timestamp: timestamp, isKeyframe: isKeyframe)
+            for session in readyClients {
+                guard self.containsClient(session), session.connectionReady else { continue }
 
-            connection.send(content: packet, completion: .contentProcessed { error in
-                if error != nil {
-                    self.droppedFrames += 1
+                // With short-GOP encoding, a fresh client must start on a keyframe.
+                if session.waitingForSyncFrame {
+                    guard isKeyframe else {
+                        self.droppedFrames += 1
+                        continue
+                    }
+                    session.waitingForSyncFrame = false
+                    debugLog("First keyframe sent to client \(session.id)")
                 }
-            })
 
-            // Track frame age at send time for pipeline profiling
-            let sendAge = DispatchTime.now().uptimeNanoseconds - timestamp
-            self.updateStats(bytes: data.count, frameAgeNs: sendAge)
+                let packet = self.makeFramePacket(
+                    data,
+                    timestamp: timestamp,
+                    isKeyframe: isKeyframe,
+                    clientSupportsFrameMetadata: session.clientSupportsFrameMetadata
+                )
+
+                session.connection.send(content: packet, completion: .contentProcessed { [weak self] error in
+                    if error != nil {
+                        self?.droppedFrames += 1
+                    }
+                })
+
+                deliveredClients += 1
+            }
+
+            if deliveredClients > 0 {
+                let sendAge = DispatchTime.now().uptimeNanoseconds - timestamp
+                self.updateStats(bytes: data.count * deliveredClients, frameAgeNs: sendAge)
+            }
         }
     }
 
-    private func makeFramePacket(_ data: Data, timestamp: UInt64, isKeyframe: Bool) -> Data {
+    private func makeFramePacket(_ data: Data, timestamp: UInt64, isKeyframe: Bool, clientSupportsFrameMetadata: Bool) -> Data {
         if clientSupportsFrameMetadata {
             var packet = Data(capacity: data.count + 14)
             packet.append(WireMessage.videoFrameWithMetadata)
@@ -462,7 +484,7 @@ class StreamingServer {
         withUnsafeBytes(of: &frameSize) { packet.append(contentsOf: $0) }
     }
 
-    // Pipeline profiling: track frame age at send time
+    // Pipeline profiling: track frame age at send time.
     private var totalFrameAgeNs: UInt64 = 0
     private var profiledFrameCount: UInt64 = 0
 
@@ -482,10 +504,10 @@ class StreamingServer {
             let fps = Double(frameCount) / elapsed
             onStats?(fps, mbps)
 
-            // Log pipeline latency profile
+            // Log pipeline latency profile.
             if profiledFrameCount > 0 {
                 let avgAgeMs = Double(totalFrameAgeNs) / Double(profiledFrameCount) / 1_000_000.0
-                debugLog("Pipeline: \(String(format: "%.1f", fps))fps, \(String(format: "%.1f", mbps))Mbps, avg frame age: \(String(format: "%.1f", avgAgeMs))ms, dropped: \(droppedFrames)")
+                debugLog("Pipeline: \(String(format: "%.1f", fps))fps, \(String(format: "%.1f", mbps))Mbps, avg frame age: \(String(format: "%.1f", avgAgeMs))ms, clients: \(clientCount), dropped: \(droppedFrames)")
             }
 
             bytesSent = 0
@@ -499,15 +521,71 @@ class StreamingServer {
 
     func stop() {
         isStopped = true
-        isReceiving = false
 
-        // Wait for pending operations before cancelling
         frameQueue.sync {}
         receiveQueue.sync {}
 
-        connection?.cancel()
+        let sessions = snapshotClients()
+        clientsLock.lock()
+        clients.removeAll()
+        clientsLock.unlock()
+
+        for session in sessions {
+            session.isReceiving = false
+            session.connectionReady = false
+            session.connection.cancel()
+        }
+
         listener?.cancel()
-        connection = nil
         listener = nil
+        onClientCountChanged?(0)
+    }
+
+    private var clientCount: Int {
+        clientsLock.lock()
+        defer { clientsLock.unlock() }
+        return clients.count
+    }
+
+    private func addClient(_ session: ClientSession) {
+        clientsLock.lock()
+        clients[session.id] = session
+        let count = clients.count
+        clientsLock.unlock()
+
+        debugLog("Accepted client \(session.id); clients=\(count)")
+        onClientCountChanged?(count)
+    }
+
+    private func removeClient(_ session: ClientSession, reason: String) {
+        clientsLock.lock()
+        let removed = clients.removeValue(forKey: session.id) != nil
+        let remaining = clients.count
+        clientsLock.unlock()
+
+        guard removed else { return }
+
+        session.isReceiving = false
+        session.connectionReady = false
+        session.inputBuffer.removeAll(keepingCapacity: true)
+        session.connection.cancel()
+
+        debugLog("Removed client \(session.id) (\(reason)); clients=\(remaining)")
+        onClientCountChanged?(remaining)
+        if remaining == 0 {
+            onClientDisconnected?()
+        }
+    }
+
+    private func containsClient(_ session: ClientSession) -> Bool {
+        clientsLock.lock()
+        defer { clientsLock.unlock() }
+        return clients[session.id] === session
+    }
+
+    private func snapshotClients() -> [ClientSession] {
+        clientsLock.lock()
+        defer { clientsLock.unlock() }
+        return Array(clients.values)
     }
 }

@@ -107,7 +107,7 @@ struct SettingsView: View {
                     .onHover { headerHovered = $0 }
 
                     VStack(alignment: .leading, spacing: 3) {
-                        Text("Side Screen")
+                        Text("SideScreen Multi")
                             .font(.system(size: 20, weight: .bold, design: .rounded))
                         Text("Turn your tablet into a second display")
                             .font(.system(size: 12, weight: .medium))
@@ -131,7 +131,7 @@ struct SettingsView: View {
                         Button("Cancel", role: .cancel) { }
                         Button("Reset", role: .destructive) {
                             settings.resetToDefaults()
-                            if let window = NSApp.windows.first(where: { $0.title == "Side Screen" }) {
+                            if let window = NSApp.windows.first(where: { $0.title == "SideScreen Multi" }) {
                                 window.center()
                             }
                         }
@@ -793,7 +793,7 @@ struct SettingsView: View {
                                 }
                         }
                         .buttonStyle(.plain)
-                        .help("Quit Side Screen (⌘Q)")
+                        .help("Quit SideScreen Multi (Command-Q)")
                     }
                     .padding(.horizontal, 20)
                     .padding(.vertical, 14)
@@ -1183,7 +1183,7 @@ class SettingsWindowController: NSWindowController, NSWindowDelegate {
             defer: false
         )
 
-        window.title = "Side Screen"
+        window.title = "SideScreen Multi"
         window.titlebarAppearsTransparent = true
         window.backgroundColor = .windowBackgroundColor
         window.isMovableByWindowBackground = true
@@ -1293,7 +1293,7 @@ struct WirelessSection: View {
                     } else {
                         Text("Generating QR…").foregroundColor(.secondary)
                     }
-                    Text("Scan this QR from Side Screen Android (Wireless tab)")
+                    Text("Scan this QR from SideScreen Multi Android (Wireless tab)")
                         .font(.system(size: 11))
                         .foregroundColor(.secondary)
                         .multilineTextAlignment(.center)

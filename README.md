@@ -1,282 +1,101 @@
-<a id="readme-top"></a>
+# SideScreen Multi
 
-<div align="center">
+SideScreen Multi is an MIT-licensed fork of [SideScreen](https://github.com/tranvuongquocdat/SideScreen) focused on making Android phones and tablets useful as USB-connected macOS displays.
 
-<img src="resources/logo/sidescreen-icon.png" alt="Side Screen" width="128"/>
+The immediate target is a MacBook with more than one Android receiver attached at the same time, for example a Galaxy Tab plus a Galaxy Z Fold.
 
-<h1>Side Screen</h1>
+## Status
 
-<p><em>Turn your Android tablet into a second display for macOS — USB-C or wireless over WiFi</em></p>
+This repository is early alpha.
 
-<p>
-  <img src="https://img.shields.io/github/v/release/tranvuongquocdat/SideScreen?style=for-the-badge&label=version&color=blue" alt="Version">
-  <a href="https://github.com/tranvuongquocdat/SideScreen/blob/main/LICENSE">
-    <img src="https://img.shields.io/github/license/tranvuongquocdat/SideScreen?style=for-the-badge&color=34C759" alt="License">
-  </a>
-  <a href="https://github.com/tranvuongquocdat/SideScreen/stargazers">
-    <img src="https://img.shields.io/github/stars/tranvuongquocdat/SideScreen?style=for-the-badge&color=FF9500" alt="Stars">
-  </a>
-  <a href="https://github.com/tranvuongquocdat/SideScreen/releases">
-    <img src="https://img.shields.io/github/downloads/tranvuongquocdat/SideScreen/total?style=for-the-badge&color=8E44AD&label=downloads" alt="Downloads">
-  </a>
-</p>
+What works in this fork:
 
-![Swift](https://img.shields.io/badge/Swift-FA7343?style=for-the-badge&logo=swift&logoColor=white)
-![Kotlin](https://img.shields.io/badge/Kotlin-7F52FF?style=for-the-badge&logo=kotlin&logoColor=white)
-![macOS](https://img.shields.io/badge/macOS_14+-000000?style=for-the-badge&logo=apple&logoColor=white)
-![Android](https://img.shields.io/badge/Android_8+-3DDC84?style=for-the-badge&logo=android&logoColor=white)
-![Universal Binary](https://img.shields.io/badge/Universal_Binary-Apple_Silicon_+_Intel-000000?style=for-the-badge&logo=apple&logoColor=white)
+- macOS host builds on macOS 14+ with Swift Package Manager.
+- Android client keeps the upstream USB and wireless receiver flow.
+- USB setup now targets every authorized Android device by ADB serial.
+- The Mac streaming server no longer evicts the first receiver when another receiver connects.
+- Multiple Android clients can receive the same virtual display stream concurrently.
 
-</div>
+What is still in progress:
 
----
+- Independent virtual displays per Android device.
+- Per-device resolution, rotation, bitrate, and touch routing.
+- Release signing, notarization, and production packaging.
+- End-to-end validation with two physical Android devices.
 
-<div align="center">
-  <img src="resources/screenshots/hero_screenshot.jpeg" alt="Side Screen — Mac + Android tablet as second display" width="800"/>
-</div>
+## Why This Fork Exists
 
----
-
-## About
-
-Side Screen brings true second-display functionality to your Android tablet — over USB-C cable for the lowest latency, or wirelessly over WiFi after a one-time QR pair. Something macOS doesn't natively support either way.
-
-While Apple's Sidecar only works with iPads, millions of Android tablets sit unused as potential workstations. Side Screen bridges that gap with hardware-accelerated H.265 streaming, sub-16ms pipeline latency on USB, and full touch input — making your tablet feel like a real monitor, not a laggy mirror.
-
-Built entirely open-source, Side Screen is designed to be fast, lightweight, and seamlessly integrated.
-
-For full details, features, and documentation, please visit **[sidescreen.dev](https://sidescreen.dev)**
-
-<p align="right"><a href="#readme-top">↑ Back to top</a></p>
-
----
-
-## Features
-
-### USB-C or Wireless
-
-Two ways to connect, same picture quality. **USB-C** plugs in the cable for the lowest possible latency — adb-reverse port forwarding is set up automatically. **Wireless** lets you scan a QR code from the Mac once and the tablet auto-reconnects on every future launch over WiFi (5 GHz strongly recommended). The auth token is generated locally and stays on your Mac; reset it any time to revoke access.
-
-### Virtual Display
-
-Create a true virtual display on your Mac. Drag windows to your tablet like a real monitor — not mirroring, but extending.
-
-<div align="center">
-  <img src="resources/screenshots/feature_virtual_display.png" alt="Virtual Display in macOS Display Preferences" width="600"/>
-</div>
-
-### Ultra-Low Latency
-
-Hardware-accelerated H.265 encoding on Mac and decoding on Android. Async pipeline architecture delivers frames in under 30ms.
-
-<div align="center">
-  <img src="resources/screenshots/android_performance.png" alt="Low Latency Streaming with Stats Overlay" width="700"/>
-</div>
-
-### Touch Support
-
-Use your tablet's touchscreen to interact with macOS. Touch prediction compensates for network latency, making taps and drags feel natural.
-
-### HiDPI (Retina) Support
-
-Enable HiDPI mode to render at 2× resolution internally — text and icons are sharp at any logical resolution, just like a MacBook Retina display. Perfect for users with 2K/4K tablets who want a readable workspace without sacrificing sharpness.
-
-### Gaming Mode
-
-Enable Gaming Boost for optimized settings: 1 Gbps bitrate, ultra-low latency encoding, 120 FPS.
-
-### Customizable
-
-Configure resolution (up to 4K/8K), frame rate (30–120 FPS), bitrate (20–5000 Mbps), and quality presets from the Mac app.
-
-<div align="center">
-  <img src="resources/screenshots/mac_settings_1.png" alt="macOS Settings — Display & FPS" height="500"/>
-  &nbsp;&nbsp;
-  <img src="resources/screenshots/mac_settings_2.png" alt="macOS Settings — Streaming & Status" height="500"/>
-  &nbsp;&nbsp;
-  <img src="resources/screenshots/android_settings.png" alt="Android — Connection Screen" height="500"/>
-</div>
-
-<p align="right"><a href="#readme-top">↑ Back to top</a></p>
-
----
+Upstream SideScreen is designed around one active Android receiver. That is enough for a tablet-as-monitor workflow, but it does not cover multi-device desk setups. SideScreen Multi keeps the upstream foundation and extends it toward multi-receiver USB operation.
 
 ## Requirements
 
-| | macOS Host | Android Client |
-|---|---|---|
-| **OS** | macOS 14 (Sonoma)+ | Android 8.0 (API 26)+ |
-| **Hardware** | Apple Silicon or Intel | H.265 hardware decoder |
-| **USB mode** | USB-C port + `adb` (`brew install android-platform-tools`) | USB-C cable + USB Debugging enabled |
-| **Wireless mode** | Same WiFi network as the tablet (5 GHz recommended) | Camera (for QR scan) + Google Play Services (for ML Kit barcode) |
+| Component | Requirement |
+| --- | --- |
+| macOS host | macOS 14 Sonoma or newer |
+| Android receiver | Android 8.0 or newer with H.265 hardware decode |
+| USB mode | Android platform-tools / `adb`, USB debugging enabled |
+| Build tools | Swift 5.9+, Xcode command line tools, Android Studio or JDK/Android SDK |
 
----
+## Build
 
-## Installation
-
-Download the latest release from [**GitHub Releases**](https://github.com/tranvuongquocdat/SideScreen/releases):
-
-- **macOS**: Download `.dmg`, open it, drag Side Screen to Applications
-- **Android**: Download `.apk`, install on your tablet (enable "Unknown sources" if needed). Port forwarding is handled automatically by the Mac app.
-
-> **⚠️ macOS Gatekeeper**
-> If macOS says the app is "damaged", open Terminal and run:
-> ```bash
-> sudo xattr -cr /Applications/SideScreen.app
-> ```
-> Then open the app again. This is needed because the app is not notarized with an Apple Developer certificate.
-
-> **⚠️ ADB Required**
-> The Mac app needs `adb` to communicate with your Android device. If the app doesn't show "Running" after launch, you likely need to install ADB:
->
-> 1. Install Homebrew (if you don't have it):
->    ```bash
->    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
->    ```
-> 2. Install ADB:
->    ```bash
->    brew install --cask android-platform-tools
->    ```
-
-<details>
-<summary><strong>Build from source (for developers)</strong></summary>
+macOS host:
 
 ```bash
-git clone https://github.com/tranvuongquocdat/SideScreen.git
-cd SideScreen
-
-# macOS
-cd MacHost && swift build -c release
-
-# Android
-cd AndroidClient && ./gradlew assembleDebug
+cd MacHost
+swift build
 ```
-</details>
 
----
+Android receiver:
 
-## Usage
-
-### USB mode (default — lowest latency)
-
-1. Connect tablet to Mac via **USB-C**
-2. Launch **Side Screen** on Mac (runs in menu bar — port forwarding is set up automatically)
-3. Open **Side Screen** on tablet → keep on the **USB** tab → tap **Connect**
-4. Done — drag windows to your new display
-
-### Wireless mode (new in 0.8.0 — no cable)
-
-1. Launch **Side Screen** on Mac → toggle to the **Wireless** tab → a QR code appears
-2. Open **Side Screen** on tablet → switch to the **Wireless** tab → tap **Scan QR Code** → grant camera permission → aim at the QR on the Mac
-3. The tablet remembers the Mac. Subsequent launches auto-reconnect — no rescan.
-
-Wireless mode requires both devices to be on the same WiFi network. **5 GHz is strongly recommended** — 2.4 GHz can introduce noticeable jitter on dynamic content. If you need to revoke access, click **Reset Token (forget all)** on the Mac and re-pair each tablet.
-
-USB mode remains the lowest-latency option for drawing or fast-paced gaming. Wireless adds 10–50 ms depending on WiFi quality.
-
----
-
-## Configuration
-
-| Setting | Options | Default |
-|---------|---------|---------|
-| Resolution | 720p to 8K, 30+ presets + custom | 1920x1200 |
-| Frame Rate | 30, 60, 90, 120 FPS | 120 |
-| Bitrate | 20–5000 Mbps | 1000 Mbps |
-| Quality | Ultra Low, Low, Medium, High | Ultra Low |
-| HiDPI (Retina) | On/Off | Off |
-| Gaming Boost | On/Off (1 Gbps, 120 Hz) | Off |
-| Touch Input | On/Off | On |
-
----
-
-## Troubleshooting
-
-<details>
-<summary><strong>"SideScreen is damaged" on macOS</strong></summary>
-
-This happens because the app is not notarized by Apple. Run this command to fix it:
 ```bash
-sudo xattr -cr /Applications/SideScreen.app
+cd AndroidClient
+./gradlew assembleDebug
 ```
-Then open the app again.
-</details>
 
-<details>
-<summary><strong>"Connection refused" on Android</strong></summary>
+Helper scripts are available under `scripts/`, but the Swift and Gradle commands above are the canonical development entry points.
 
-The Mac app sets up `adb reverse` automatically when streaming starts. If it still fails, make sure `adb` is installed (via Android SDK or Homebrew: `brew install android-platform-tools`) and your device has USB debugging enabled.
-</details>
+## USB Development Flow
 
-<details>
-<summary><strong>High latency or stuttering</strong></summary>
+1. Enable Developer Options and USB debugging on each Android device.
+2. Connect the devices by USB.
+3. Confirm every device is authorized:
 
-- Lower resolution or frame rate
-- Ensure H.265 hardware codec support on your device
-- For USB mode, use a high-quality USB-C cable (not charge-only)
-- For wireless mode, ensure both devices are on **5 GHz WiFi**, not 2.4 GHz; reduce refresh rate to 60 Hz if jitter persists
-</details>
+```bash
+adb devices -l
+```
 
-<details>
-<summary><strong>Wireless: "Couldn't reach Mac" / connection times out</strong></summary>
+4. Build and start the Mac host.
+5. Open SideScreen Multi on each Android device and use the USB tab.
 
-- Both devices must be on the same WiFi network (and same subnet — some mesh routers isolate "guest" devices)
-- Click **Start** on the Mac before scanning the QR — the listener only binds when the server is running
-- If the Mac changes WiFi or its LAN IP, scan a fresh QR (the cached one points to the old address)
-- macOS may prompt for **Local Network** permission on first wireless toggle — grant it; without it, LAN inbound is silently dropped
-</details>
+The Mac host configures:
 
-<details>
-<summary><strong>Wireless: "Re-pair required" after restart / reinstall</strong></summary>
+```bash
+adb -s <serial> reverse tcp:54321 tcp:54321
+```
 
-The Mac's auth token resets when you click **Reset Token (forget all)** or reinstall the app. Tap **Scan QR Code** on the Android client and scan the new QR shown on the Mac.
-</details>
+for each authorized Android device.
 
-<details>
-<summary><strong>Virtual display not appearing</strong></summary>
+## Architecture
 
-Grant Screen Recording permission: **System Preferences → Privacy & Security → Screen Recording → Enable Side Screen**
-</details>
+The fork currently has one virtual macOS display and one encoder feeding multiple receiver connections. That is useful for proving stable multi-client transport, but it mirrors the same desktop to every receiver.
 
----
+The planned architecture is one pipeline per Android device:
 
-## Contributing
+```text
+Android device A -> ADB reverse port A -> virtual display A -> capture A -> encoder A
+Android device B -> ADB reverse port B -> virtual display B -> capture B -> encoder B
+```
 
-Contributions are welcome!
+See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) and [docs/ROADMAP.md](docs/ROADMAP.md).
 
-- ⭐ **Star** this repo to help others discover it
-- 🐛 **Report bugs** via [Issues](https://github.com/tranvuongquocdat/SideScreen/issues)
-- 💡 **Suggest features** via [Issues](https://github.com/tranvuongquocdat/SideScreen/issues)
-- 🔧 **Submit PRs** — see [CONTRIBUTING.md](CONTRIBUTING.md)
+## Attribution
 
----
+SideScreen Multi is derived from SideScreen by Trần Vương Quốc Đạt and contributors. The original project is MIT licensed. The original copyright notice is preserved in [LICENSE](LICENSE), and fork-specific attribution is documented in [NOTICE](NOTICE).
 
-## Support
+Core contributor for this fork:
 
-If Side Screen is useful to you, consider supporting development:
-
-<div align="center">
-
-[![Buy Me a Coffee](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-FFDD00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black)](https://buymeacoffee.com/tranvuongqk)
-[![GitHub Sponsors](https://img.shields.io/badge/GitHub%20Sponsors-EA4AAA?style=for-the-badge&logo=github-sponsors&logoColor=white)](https://github.com/sponsors/tranvuongquocdat)
-[![VietQR](https://img.shields.io/badge/Vietnam-VietQR-DA251D?style=for-the-badge&logoColor=white)](https://sidescreen.dev/donate.html)
-
-</div>
-
-🇻🇳 Vietnamese users — scan VietQR for a local bank transfer (no international fees) at [sidescreen.dev/donate](https://sidescreen.dev/donate.html).
-
----
+- Batikan Orpava `<batikanor@gmail.com>`
 
 ## License
 
-[MIT License](LICENSE) — free for personal and commercial use.
-
----
-
-<div align="center">
-
-Made with ❤️ by **Tran Vuong Quoc Dat**
-
-[Report Bug](https://github.com/tranvuongquocdat/SideScreen/issues) · [Request Feature](https://github.com/tranvuongquocdat/SideScreen/issues) · [Discussions](https://github.com/tranvuongquocdat/SideScreen/discussions)
-
-</div>
+MIT. See [LICENSE](LICENSE).

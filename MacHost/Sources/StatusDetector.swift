@@ -40,21 +40,27 @@ enum StatusDetector {
     /// Heuristic: parse `adb reverse --list` for `tcp:<port> tcp:<port>`.
     static func adbReverseConfigured(port: Int) -> Bool {
         guard let adbPath = adbExecutablePath() else { return false }
-        let task = Process()
-        task.executableURL = URL(fileURLWithPath: adbPath)
-        task.arguments = ["reverse", "--list"]
-        let pipe = Pipe()
-        task.standardOutput = pipe
-        task.standardError = Pipe()
-        do {
-            try task.run()
-            task.waitUntilExit()
-        } catch {
-            return false
+
+        let devices = usbDevices()
+        guard !devices.isEmpty else { return false }
+
+        return devices.allSatisfy { serial in
+            let task = Process()
+            task.executableURL = URL(fileURLWithPath: adbPath)
+            task.arguments = ["-s", serial, "reverse", "--list"]
+            let pipe = Pipe()
+            task.standardOutput = pipe
+            task.standardError = Pipe()
+            do {
+                try task.run()
+                task.waitUntilExit()
+            } catch {
+                return false
+            }
+            let data = pipe.fileHandleForReading.readDataToEndOfFile()
+            let output = String(data: data, encoding: .utf8) ?? ""
+            return output.contains("tcp:\(port) tcp:\(port)")
         }
-        let data = pipe.fileHandleForReading.readDataToEndOfFile()
-        let output = String(data: data, encoding: .utf8) ?? ""
-        return output.contains("tcp:\(port) tcp:\(port)")
     }
 
     private static var cachedAdbPath: String?

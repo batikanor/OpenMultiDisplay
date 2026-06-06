@@ -1,47 +1,24 @@
-## Description
+## Summary
 
-Brief description of the changes in this PR.
+Describe the change and why it is needed.
 
-## Type of Change
+## Scope
 
-- [ ] Bug fix (non-breaking change that fixes an issue)
-- [ ] New feature (non-breaking change that adds functionality)
-- [ ] Breaking change (fix or feature that would cause existing functionality to change)
-- [ ] Documentation update
-- [ ] Code refactoring
-- [ ] Performance improvement
-
-## Related Issue
-
-Fixes #(issue number)
-
-## Changes Made
-
-- Change 1
-- Change 2
-- Change 3
+- [ ] macOS host
+- [ ] Android receiver
+- [ ] USB / ADB
+- [ ] Wireless
+- [ ] Documentation
+- [ ] Packaging / release
 
 ## Testing
 
-Describe how you tested your changes:
+- [ ] `cd MacHost && swift build`
+- [ ] `cd AndroidClient && ./gradlew assembleDebug`
+- [ ] Tested with one Android device
+- [ ] Tested with two or more Android devices
+- [ ] Not applicable; explain below
 
-- [ ] Tested on macOS [version]
-- [ ] Tested on Android [device/version]
-- [ ] Tested USB connection
-- [ ] Tested streaming performance
+## Notes
 
-## Screenshots (if applicable)
-
-Add screenshots for UI changes.
-
-## Checklist
-
-- [ ] My code follows the project's coding standards
-- [ ] I have tested my changes thoroughly
-- [ ] I have updated documentation if needed
-- [ ] My changes don't introduce new warnings
-- [ ] I have added comments for complex logic
-
-## Additional Notes
-
-Any additional information for reviewers.
+List remaining risks, follow-up work, or hardware used for testing.

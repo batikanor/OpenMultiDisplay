@@ -1,6 +1,6 @@
 ---
 name: Bug Report
-about: Report a bug to help us improve Side Screen
+about: Report a SideScreen Multi bug
 title: '[Bug] '
 labels: bug
 assignees: ''
@@ -8,51 +8,37 @@ assignees: ''
 
 ## Description
 
-A clear and concise description of the bug.
+What happened?
 
 ## Environment
 
-**macOS Host:**
-- macOS Version: [e.g., 14.2 Sonoma]
-- Mac Model: [e.g., MacBook Pro M3]
-- Side Screen Version: [e.g., 1.0.0]
+**macOS host**
+- macOS version:
+- Mac model:
+- SideScreen Multi version/commit:
 
-**Android Client:**
-- Android Version: [e.g., Android 14]
-- Device Model: [e.g., Samsung Galaxy Tab S9]
-- Side Screen Version: [e.g., 1.0.0]
-
-**Connection:**
-- USB Cable: [e.g., USB-C to USB-C]
-- Cable Quality: [e.g., Original Samsung cable]
+**Android receiver(s)**
+- Device model(s):
+- Android version(s):
+- Connection mode: USB / wireless
+- Number of connected receivers:
 
 ## Steps to Reproduce
 
-1. Go to '...'
-2. Click on '...'
-3. See error
+1.
+2.
+3.
 
 ## Expected Behavior
 
-What you expected to happen.
+What should have happened?
 
 ## Actual Behavior
 
-What actually happened.
+What happened instead?
 
-## Screenshots / Logs
+## Logs
 
-If applicable, add screenshots or log output to help explain the problem.
-
-<details>
-<summary>Log output (if available)</summary>
-
+```text
+Paste relevant logs here.
 ```
-Paste logs here
-```
-
-</details>
-
-## Additional Context
-
-Add any other context about the problem here.

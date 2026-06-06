@@ -4,10 +4,10 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 VERSION=$(cat "$ROOT_DIR/VERSION" | tr -d '[:space:]')
-APP_DIR="$ROOT_DIR/SideScreen.app"
+APP_DIR="$ROOT_DIR/SideScreen Multi.app"
 
 echo "======================================="
-echo "  Side Screen - Dev Test (v$VERSION)"
+echo "  SideScreen Multi - Dev Test (v$VERSION)"
 echo "======================================="
 echo ""
 
@@ -37,9 +37,9 @@ cat > "$APP_DIR/Contents/Info.plist" << EOF
     <key>CFBundleIconFile</key>
     <string>AppIcon</string>
     <key>CFBundleIdentifier</key>
-    <string>com.sidescreen.app</string>
+    <string>com.batikanor.sidescreenmulti</string>
     <key>CFBundleName</key>
-    <string>Side Screen</string>
+    <string>SideScreen Multi</string>
     <key>CFBundleVersion</key>
     <string>$VERSION</string>
     <key>CFBundleShortVersionString</key>
@@ -53,7 +53,7 @@ cat > "$APP_DIR/Contents/Info.plist" << EOF
     <key>NSHighResolutionCapable</key>
     <true/>
     <key>NSScreenCaptureUsageDescription</key>
-    <string>Side Screen needs screen recording access to capture your virtual display.</string>
+    <string>SideScreen Multi needs screen recording access to capture your virtual display.</string>
 </dict>
 </plist>
 EOF
@@ -64,7 +64,15 @@ echo "  OK"
 # 3. Build Android
 echo "[3/5] Building Android..."
 cd "$ROOT_DIR/AndroidClient"
-export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"
+if [ -d "/opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home" ]; then
+    export JAVA_HOME="/opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home"
+elif [ -d "/Applications/Android Studio.app/Contents/jbr/Contents/Home" ]; then
+    export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"
+fi
+if [ -d "/opt/homebrew/share/android-commandlinetools" ]; then
+    export ANDROID_HOME="${ANDROID_HOME:-/opt/homebrew/share/android-commandlinetools}"
+    export ANDROID_SDK_ROOT="${ANDROID_SDK_ROOT:-$ANDROID_HOME}"
+fi
 ./gradlew assembleDebug -q
 APK="$ROOT_DIR/AndroidClient/app/build/outputs/apk/debug/app-debug.apk"
 echo "  OK"
@@ -79,22 +87,22 @@ fi
 
 # 5. Run macOS app
 echo "[5/5] Starting macOS app..."
-pkill -f "SideScreen.app" 2>/dev/null || true
+pkill -f "SideScreen Multi.app" 2>/dev/null || true
 sleep 0.5
 
-adb reverse tcp:8888 tcp:8888 2>/dev/null || true
+adb reverse tcp:54321 tcp:54321 2>/dev/null || true
 open "$APP_DIR"
 
 echo ""
 echo "======================================="
 echo "  Ready to test!"
 echo "  App: $APP_DIR"
-echo "  Open Side Screen on your tablet"
+echo "  Open SideScreen Multi on your tablet"
 echo "======================================="
 echo ""
 read -p "Test result? [y=OK / n=failed]: " RESULT
 
-pkill -f "SideScreen.app" 2>/dev/null || true
+pkill -f "SideScreen Multi.app" 2>/dev/null || true
 
 if [ "$RESULT" = "y" ]; then
     echo ""
