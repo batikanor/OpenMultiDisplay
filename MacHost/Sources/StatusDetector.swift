@@ -15,10 +15,15 @@ enum StatusDetector {
 
     /// Run `adb devices`, return list of device serials in `device` state.
     static func usbDevices() -> [String] {
+        usbDeviceInfos().map(\.serial)
+    }
+
+    /// Run `adb devices -l`, return authorized USB/ADB devices with serial and model metadata.
+    static func usbDeviceInfos() -> [USBDeviceInfo] {
         guard let adbPath = adbExecutablePath() else { return [] }
         let task = Process()
         task.executableURL = URL(fileURLWithPath: adbPath)
-        task.arguments = ["devices"]
+        task.arguments = ["devices", "-l"]
         let pipe = Pipe()
         task.standardOutput = pipe
         task.standardError = Pipe()
@@ -31,9 +36,11 @@ enum StatusDetector {
         let data = pipe.fileHandleForReading.readDataToEndOfFile()
         let output = String(data: data, encoding: .utf8) ?? ""
         return output.split(separator: "\n").compactMap { line in
-            let parts = line.split(separator: "\t").map(String.init)
-            guard parts.count == 2, parts[1] == "device" else { return nil }
-            return parts[0]
+            let parts = line.split(whereSeparator: { $0 == "\t" || $0 == " " }).map(String.init)
+            guard parts.count >= 2, parts[1] == "device" else { return nil }
+            let model = parts.first(where: { $0.hasPrefix("model:") })?
+                .replacingOccurrences(of: "model:", with: "")
+            return USBDeviceInfo(serial: parts[0], model: model)
         }
     }
 
@@ -59,14 +66,14 @@ enum StatusDetector {
             }
             let data = pipe.fileHandleForReading.readDataToEndOfFile()
             let output = String(data: data, encoding: .utf8) ?? ""
-            return output.contains("tcp:\(port) tcp:\(port)")
+            return output.contains("tcp:\(port) tcp:")
         }
     }
 
     private static var cachedAdbPath: String?
     private static var lastAdbCacheCheck: Date = .distantPast
 
-    private static func adbExecutablePath() -> String? {
+    static func adbExecutablePath() -> String? {
         // Re-resolve every 5 s so install/uninstall is reflected.
         if let cached = cachedAdbPath, Date().timeIntervalSince(lastAdbCacheCheck) < 5.0 {
             return cached

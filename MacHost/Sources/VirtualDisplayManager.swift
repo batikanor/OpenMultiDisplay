@@ -29,7 +29,8 @@ class VirtualDisplayManager {
         height: Int,
         refreshRate: Int = 60,
         hiDPI: Bool = false,
-        name: String = "Virtual Display"
+        name: String = "Virtual Display",
+        serialNumber: UInt32 = 0x0001
     ) throws {
         // Clean up existing display if any
         destroyDisplay()
@@ -56,7 +57,7 @@ class VirtualDisplayManager {
         // Use width * 10000 + height so (3840,2400) ≠ (2400,3840) — avoids portrait/landscape collision
         descriptor.productID = UInt32((physW * 10000 + physH) & 0xFFFFFFFF)
         descriptor.vendorID = 0xEEEE
-        descriptor.serialNum = 0x0001
+        descriptor.serialNum = serialNumber == 0 ? 1 : serialNumber
 
         self.displayDescriptor = descriptor
 

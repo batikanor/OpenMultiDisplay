@@ -61,6 +61,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var cancellables = Set<AnyCancellable>()
     private var permissionCheckTimer: Timer?
     private var statusRefreshTimer: Timer?
+    private var displayPipelines: [String: DisplayPipeline] = [:]
+    private var pipelineClientCounts: [String: Int] = [:]
+    private var pipelineStats: [String: (fps: Double, mbps: Double)] = [:]
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         print("✅ App launched")
@@ -74,9 +77,21 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         // Setup settings observers
         setupSettingsObservers()
 
+        let shouldStartUSBOnLaunch = CommandLine.arguments.contains("--start-usb")
+
         // Check permissions
         Task {
             await checkPermissions()
+            if shouldStartUSBOnLaunch {
+                await MainActor.run {
+                    settings.connectionMode = .usb
+                }
+                if settings.hasScreenRecordingPermission {
+                    await startServer()
+                } else {
+                    debugLog("Auto-start USB skipped: Screen Recording permission is missing")
+                }
+            }
         }
 
         // Periodic status refresh for the per-mode checklist (ADB / WiFi / Listening IP).
@@ -157,6 +172,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                     quality: self.settings.effectiveQuality,
                     gamingBoost: gamingBoost
                 )
+                for pipeline in self.displayPipelines.values {
+                    pipeline.updateEncoderSettings(
+                        bitrateMbps: self.settings.effectiveBitrate,
+                        quality: self.settings.effectiveQuality,
+                        gamingBoost: gamingBoost
+                    )
+                }
             }
             .store(in: &cancellables)
 
@@ -171,6 +193,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                     quality: quality,
                     gamingBoost: false
                 )
+                for pipeline in self.displayPipelines.values {
+                    pipeline.updateEncoderSettings(
+                        bitrateMbps: bitrate,
+                        quality: quality,
+                        gamingBoost: false
+                    )
+                }
             }
             .store(in: &cancellables)
 
@@ -181,6 +210,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 guard let self = self, self.settings.isRunning else { return }
                 print("🔄 Rotation changed to \(rotation)°")
                 self.streamingServer?.updateRotation(rotation)
+                for pipeline in self.displayPipelines.values {
+                    pipeline.updateRotation(rotation)
+                }
             }
             .store(in: &cancellables)
 
@@ -190,6 +222,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             .dropFirst()
             .sink { [weak self] enabled in
                 self?.streamingServer?.touchEnabled = enabled
+                self?.displayPipelines.values.forEach { $0.setTouchEnabled(enabled) }
             }
             .store(in: &cancellables)
 
@@ -432,6 +465,78 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }.value
     }
 
+    /// Setup serial-specific ADB reverse mappings for independent USB displays.
+    /// Android still connects to 127.0.0.1:<settings.port>, but each physical
+    /// device is forwarded to a different Mac host port.
+    func setupADBReverse(for specs: [DeviceDisplaySpec]) async -> Bool {
+        let androidPort = Int(settings.port)
+        let mappings = specs.map {
+            (serial: $0.device.serial, name: $0.name, hostPort: Int($0.hostPort))
+        }
+
+        guard !mappings.isEmpty else { return false }
+        print("🔌 Setting up per-device ADB reverse mappings...")
+
+        return await Task.detached(priority: .utility) { () async -> Bool in
+            guard let adbPath = StatusDetector.adbExecutablePath() else {
+                print("⚠️  ADB not found - USB connection may not work")
+                return false
+            }
+
+            func runADB(_ arguments: [String]) -> (status: Int32, output: String) {
+                let process = Process()
+                process.executableURL = URL(fileURLWithPath: adbPath)
+                process.arguments = arguments
+
+                let pipe = Pipe()
+                process.standardOutput = pipe
+                process.standardError = pipe
+
+                do {
+                    try process.run()
+                    process.waitUntilExit()
+                    let data = pipe.fileHandleForReading.readDataToEndOfFile()
+                    let output = String(data: data, encoding: .utf8) ?? ""
+                    return (process.terminationStatus, output.trimmingCharacters(in: .whitespacesAndNewlines))
+                } catch {
+                    return (-1, error.localizedDescription)
+                }
+            }
+
+            for attempt in 1...3 {
+                var failed: [String] = []
+
+                for mapping in mappings {
+                    _ = runADB(["-s", mapping.serial, "reverse", "--remove", "tcp:\(androidPort)"])
+                    let result = runADB([
+                        "-s", mapping.serial,
+                        "reverse",
+                        "tcp:\(androidPort)",
+                        "tcp:\(mapping.hostPort)"
+                    ])
+
+                    if result.status == 0 {
+                        print("✅ \(mapping.name) (\(mapping.serial)): tcp:\(androidPort) -> tcp:\(mapping.hostPort)")
+                    } else {
+                        failed.append(mapping.serial)
+                        print("⚠️  ADB reverse attempt \(attempt)/3 failed for \(mapping.serial): \(result.output)")
+                    }
+                }
+
+                if failed.isEmpty {
+                    print("✅ Per-device ADB reverse setup complete for \(mappings.count) device(s)")
+                    return true
+                }
+
+                if attempt < 3 {
+                    try? await Task.sleep(nanoseconds: 1_000_000_000)
+                }
+            }
+
+            return false
+        }.value
+    }
+
     @MainActor
     func showPermissionAlert() {
         let version = ProcessInfo.processInfo.operatingSystemVersion
@@ -455,9 +560,144 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
+    private func stopDisplayPipelines() {
+        for pipeline in displayPipelines.values {
+            pipeline.stop()
+        }
+        displayPipelines.removeAll()
+        pipelineClientCounts.removeAll()
+        pipelineStats.removeAll()
+    }
+
+    private func startUSBPipelines() async {
+        do {
+            stopDisplayPipelines()
+
+            let devices = StatusDetector.usbDeviceInfos()
+            guard !devices.isEmpty else {
+                throw NSError(
+                    domain: "SideScreenMulti",
+                    code: 10,
+                    userInfo: [NSLocalizedDescriptionKey: "No authorized Android USB devices found. Unlock each device and accept the USB debugging prompt."]
+                )
+            }
+
+            DeviceDisplayConfigStore.writeSampleIfMissing(for: devices, settings: settings)
+            let savedConfigs = DeviceDisplayConfigStore.load()
+            let mainBounds = CGDisplayBounds(CGMainDisplayID())
+            let fallbackY = Int(mainBounds.minY)
+            var nextFallbackX = Int(mainBounds.maxX)
+            let basePort = Int(settings.port)
+            let spacing = 40
+            var specs: [DeviceDisplaySpec] = []
+
+            for (index, device) in devices.enumerated() {
+                let hostPortValue = basePort + index
+                guard hostPortValue <= Int(UInt16.max) else {
+                    throw NSError(
+                        domain: "SideScreenMulti",
+                        code: 11,
+                        userInfo: [NSLocalizedDescriptionKey: "Configured base port \(basePort) leaves no room for \(devices.count) USB displays."]
+                    )
+                }
+
+                let baseSpec = DeviceDisplayConfigStore.spec(
+                    for: device,
+                    index: index,
+                    hostPort: UInt16(hostPortValue),
+                    settings: settings,
+                    savedConfigs: savedConfigs
+                )
+                let positionedSpec = baseSpec.withFallbackPosition(x: nextFallbackX, y: fallbackY)
+                specs.append(positionedSpec)
+                nextFallbackX += positionedSpec.width + spacing
+            }
+
+            let reverseOK = await setupADBReverse(for: specs)
+            guard reverseOK else {
+                throw NSError(
+                    domain: "SideScreenMulti",
+                    code: 12,
+                    userInfo: [NSLocalizedDescriptionKey: "Failed to configure ADB reverse for every connected USB device."]
+                )
+            }
+
+            for spec in specs {
+                let pipeline = DisplayPipeline(spec: spec)
+                let serial = spec.device.serial
+
+                pipeline.onClientCountChanged = { [weak self] count in
+                    Task { @MainActor in
+                        guard let self else { return }
+                        self.pipelineClientCounts[serial] = count
+                        self.settings.clientConnected = self.pipelineClientCounts.values.contains { $0 > 0 }
+                    }
+                }
+                pipeline.onStats = { [weak self] fps, mbps in
+                    Task { @MainActor in
+                        guard let self else { return }
+                        self.pipelineStats[serial] = (fps: fps, mbps: mbps)
+                        let stats = Array(self.pipelineStats.values)
+                        self.settings.currentFPS = stats.isEmpty
+                            ? 0
+                            : stats.map { $0.fps }.reduce(0, +) / Double(stats.count)
+                        self.settings.currentBitrate = stats.map { $0.mbps }.reduce(0, +)
+                    }
+                }
+                pipeline.onCaptureMethodChanged = { [weak self] method in
+                    Task { @MainActor in
+                        self?.settings.captureMethod = "\(spec.name): \(method)"
+                    }
+                }
+                pipeline.onTouchEvent = { [weak self] displayID, x, y, action, pointerCount, x2, y2 in
+                    self?.handleTouch(
+                        x: x,
+                        y: y,
+                        action: action,
+                        pointerCount: pointerCount,
+                        x2: x2,
+                        y2: y2,
+                        displayID: displayID
+                    )
+                }
+
+                try await pipeline.start(touchEnabled: settings.touchEnabled)
+                displayPipelines[serial] = pipeline
+                pipelineClientCounts[serial] = 0
+                pipelineStats[serial] = (fps: 0, mbps: 0)
+            }
+
+            settings.displayCreated = !displayPipelines.isEmpty
+            settings.clientConnected = false
+            settings.isRunning = true
+            print("✅ Started \(displayPipelines.count) independent USB display pipeline(s)")
+        } catch {
+            print("❌ Failed to start USB display pipelines: \(error)")
+            stopDisplayPipelines()
+            await MainActor.run {
+                settings.isRunning = false
+                settings.displayCreated = false
+                settings.clientConnected = false
+                settings.currentFPS = 0
+                settings.currentBitrate = 0
+
+                let alert = NSAlert()
+                alert.messageText = "Failed to Start USB Displays"
+                alert.informativeText = error.localizedDescription
+                alert.alertStyle = .critical
+                alert.runModal()
+            }
+        }
+    }
+
     func startServer() async {
         guard settings.hasScreenRecordingPermission else {
             await showPermissionAlert()
+            return
+        }
+
+        if settings.connectionMode == .usb {
+            await startUSBPipelines()
             return
         }
 
@@ -609,6 +849,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         // Save display position before destroying
         virtualDisplayManager?.saveDisplayPosition()
 
+        stopDisplayPipelines()
         screenCapture?.stopStreaming()
         streamingServer?.stop()
         virtualDisplayManager?.destroyDisplay()
@@ -656,7 +897,15 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     // MARK: - Touch Entry Point
 
-    func handleTouch(x: Float, y: Float, action: Int, pointerCount: Int = 1, x2: Float = 0, y2: Float = 0) {
+    func handleTouch(
+        x: Float,
+        y: Float,
+        action: Int,
+        pointerCount: Int = 1,
+        x2: Float = 0,
+        y2: Float = 0,
+        displayID overrideDisplayID: CGDirectDisplayID? = nil
+    ) {
         guard settings.touchEnabled else { return }
 
         if !AXIsProcessTrusted() {
@@ -670,7 +919,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             return
         }
 
-        guard let displayID = virtualDisplayManager?.displayID else { return }
+        guard let displayID = overrideDisplayID ?? virtualDisplayManager?.displayID else { return }
         let bounds = CGDisplayBounds(displayID)
 
         let p1 = CGPoint(

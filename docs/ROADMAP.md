@@ -10,12 +10,14 @@
 
 ## Phase 2: Independent Displays
 
-- [ ] Introduce a `DisplayPipeline` model.
-- [ ] Create one virtual display per connected Android device.
-- [ ] Assign a unique Mac-side port per device.
-- [ ] Keep Android-side USB port stable at `54321`.
-- [ ] Route frames, stats, and keyframe requests per pipeline.
-- [ ] Route touch input to the owning virtual display.
+- [x] Introduce a `DisplayPipeline` model.
+- [x] Create one virtual display per connected Android device.
+- [x] Assign a unique Mac-side port per device.
+- [x] Keep Android-side USB port stable at `54321`.
+- [x] Route frames, stats, and keyframe requests per pipeline.
+- [x] Route touch input to the owning virtual display.
+- [x] Add per-device display profiles keyed by ADB serial.
+- [ ] Add a SwiftUI editor for per-device display profiles.
 
 ## Phase 3: Product Quality
 

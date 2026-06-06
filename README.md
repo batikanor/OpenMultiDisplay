@@ -14,12 +14,13 @@ What works in this fork:
 - Android client keeps the upstream USB and wireless receiver flow.
 - USB setup now targets every authorized Android device by ADB serial.
 - The Mac streaming server no longer evicts the first receiver when another receiver connects.
-- Multiple Android clients can receive the same virtual display stream concurrently.
+- USB mode creates one virtual display, capture pipeline, encoder, and local TCP server per connected Android device.
+- Android-side USB port stays stable at `54321`; each device maps to a unique Mac-side host port.
+- Per-device display profiles can set resolution, refresh rate, bitrate, quality, HiDPI, rotation, and arrangement position by ADB serial.
 
 What is still in progress:
 
-- Independent virtual displays per Android device.
-- Per-device resolution, rotation, bitrate, and touch routing.
+- A first-class SwiftUI editor for per-device profiles.
 - Release signing, notarization, and production packaging.
 - End-to-end validation with two physical Android devices.
 
@@ -70,16 +71,44 @@ adb devices -l
 The Mac host configures:
 
 ```bash
-adb -s <serial> reverse tcp:54321 tcp:54321
+adb -s <serial-a> reverse tcp:54321 tcp:54321
+adb -s <serial-b> reverse tcp:54321 tcp:54322
 ```
 
-for each authorized Android device.
+for authorized Android devices. Android keeps connecting to `127.0.0.1:54321`; the Mac receives each physical device on a different local port.
+
+## Per-Device Display Profiles
+
+USB display profiles live at:
+
+```text
+~/.sidescreen-multi/devices.json
+```
+
+Each key is an ADB serial. Example:
+
+```json
+{
+  "devices": {
+    "R52N718E7NY": {
+      "name": "Galaxy Tab S7",
+      "width": 1920,
+      "height": 1200,
+      "refreshRate": 60,
+      "bitrate": 1000,
+      "quality": "ultralow",
+      "hiDPI": false,
+      "rotation": 0
+    }
+  }
+}
+```
+
+If the file does not exist, the Mac host writes a starter profile for the connected devices on first USB start.
 
 ## Architecture
 
-The fork currently has one virtual macOS display and one encoder feeding multiple receiver connections. That is useful for proving stable multi-client transport, but it mirrors the same desktop to every receiver.
-
-The planned architecture is one pipeline per Android device:
+In USB mode the host runs one pipeline per Android device:
 
 ```text
 Android device A -> ADB reverse port A -> virtual display A -> capture A -> encoder A
