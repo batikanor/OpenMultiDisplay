@@ -634,16 +634,30 @@ struct SettingsView: View {
                                             : "Required to capture the virtual display.")
                                             .font(.system(size: 11))
                                             .foregroundColor(.secondary)
-                                        Button(action: {
-                                            NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture")!)
-                                        }) {
-                                            HStack {
-                                                Image(systemName: "gear")
-                                                Text("Open System Settings")
+                                        HStack(spacing: 8) {
+                                            Button(action: {
+                                                (NSApp.delegate as? AppDelegate)?.refreshPermissions()
+                                            }) {
+                                                HStack {
+                                                    Image(systemName: "arrow.clockwise")
+                                                    Text("Check Again")
+                                                }
                                             }
+                                            .buttonStyle(.bordered)
+                                            .controlSize(.small)
+
+                                            Button(action: {
+                                                (NSApp.delegate as? AppDelegate)?.requestScreenRecordingPermission()
+                                            }) {
+                                                HStack {
+                                                    Image(systemName: "switch.2")
+                                                    Text("Open Privacy Toggle")
+                                                }
+                                                .frame(maxWidth: .infinity)
+                                            }
+                                            .buttonStyle(.borderedProminent)
+                                            .controlSize(.small)
                                         }
-                                        .buttonStyle(.borderedProminent)
-                                        .controlSize(.small)
                                     }
                                     .padding(10)
                                     .background(Color.orange.opacity(0.1))

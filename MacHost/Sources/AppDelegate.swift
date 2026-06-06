@@ -160,6 +160,26 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
+    @MainActor
+    func requestScreenRecordingPermission() {
+        if !CGPreflightScreenCaptureAccess() {
+            _ = CGRequestScreenCaptureAccess()
+        }
+
+        Task {
+            await checkPermissions()
+        }
+
+        openScreenRecordingSettings()
+    }
+
+    @MainActor
+    func openScreenRecordingSettings() {
+        NSWorkspace.shared.open(
+            URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture")!
+        )
+    }
+
     func setupSettingsObservers() {
         // Observer cho gaming boost changes
         settings.$gamingBoost
@@ -556,7 +576,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         let response = alert.runModal()
         if response == .alertFirstButtonReturn {
-            NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture")!)
+            openScreenRecordingSettings()
         }
     }
 
