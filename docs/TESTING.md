@@ -8,6 +8,7 @@ OpenMultiDisplay uses unit tests, CI matrix builds, static checks, and targeted 
 | --- | --- | --- |
 | Build macOS | `macos-14`, `macos-15`, `macos-15-intel`, `macos-26`, `macos-26-intel` | `swift test`, release arm64 build, release x86_64 build, universal binary creation, SwiftLint strict mode. |
 | Build Android | `ubuntu-latest` with JDK 17 | `testDebugUnitTest`, `lintDebug`, `assembleDebug`, ktlint over main and test Kotlin sources. |
+| Build Website | `ubuntu-latest` with Node.js 24 | Static website file/reference validation for `website/`. |
 | Release | Tag-triggered macOS and Android artifact build | macOS tests, universal `.app`/DMG build, Android tests, release APK build. |
 
 The macOS runner labels come from GitHub's official hosted-runner table. The Android API floor is `minSdk = 26`, and Android's official API-level table maps API 26 to Android 8.0.
@@ -15,6 +16,12 @@ The macOS runner labels come from GitHub's official hosted-runner table. The And
 ## Local Validation Commands
 
 Run these before opening a pull request:
+
+```bash
+./scripts/validate_all.sh
+```
+
+Or run individual checks:
 
 ```bash
 cd MacHost
@@ -38,6 +45,12 @@ Optional local Kotlin style check:
 ```bash
 cd AndroidClient
 ktlint "app/src/main/java/**/*.kt" "app/src/test/java/**/*.kt"
+```
+
+Website check:
+
+```bash
+node scripts/validate_website.mjs
 ```
 
 ## Current Unit Coverage
