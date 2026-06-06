@@ -1,6 +1,6 @@
 ---
 name: Bug Report
-about: Report a TetherSpan bug
+about: Report an OpenMultiDisplay bug
 title: '[Bug] '
 labels: bug
 assignees: ''
@@ -15,7 +15,7 @@ What happened?
 **macOS host**
 - macOS version:
 - Mac model:
-- TetherSpan version/commit:
+- OpenMultiDisplay version/commit:
 
 **Android receiver(s)**
 - Device model(s):

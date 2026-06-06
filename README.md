@@ -47,6 +47,7 @@ macOS host:
 
 ```bash
 cd MacHost
+swift test
 swift build
 ```
 
@@ -54,10 +55,11 @@ Android receiver:
 
 ```bash
 cd AndroidClient
+./gradlew testDebugUnitTest
 ./gradlew assembleDebug
 ```
 
-Helper scripts are available under `scripts/`, but the Swift and Gradle commands above are the canonical development entry points.
+Helper scripts are available under `scripts/`, but the Swift and Gradle commands above are the canonical development entry points. Run the unit tests before opening a pull request.
 
 ## USB Development Flow
 

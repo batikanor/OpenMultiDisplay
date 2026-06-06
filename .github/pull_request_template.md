@@ -13,8 +13,8 @@ Describe the change and why it is needed.
 
 ## Testing
 
-- [ ] `cd MacHost && swift build`
-- [ ] `cd AndroidClient && ./gradlew assembleDebug`
+- [ ] `cd MacHost && swift test && swift build`
+- [ ] `cd AndroidClient && ./gradlew testDebugUnitTest assembleDebug`
 - [ ] Tested with one Android device
 - [ ] Tested with two or more Android devices
 - [ ] Not applicable; explain below

@@ -1486,7 +1486,7 @@ struct DeviceProfileChip: View {
 
 @available(macOS 14.0, *)
 class DisplaySettings: ObservableObject {
-    private let defaults = UserDefaults.standard
+    private let defaults: UserDefaults
     private let keyPrefix = "OpenMultiDisplay_"
 
     @Published var resolution: String {
@@ -1550,7 +1550,8 @@ class DisplaySettings: ObservableObject {
 
     var onToggleServer: (() -> Void)?
 
-    init() {
+    init(defaults: UserDefaults = .standard) {
+        self.defaults = defaults
         self.resolution = defaults.string(forKey: keyPrefix + "resolution") ?? "1920x1200"
         self.refreshRate = defaults.object(forKey: keyPrefix + "refreshRate") as? Int ?? 60  // Default: 60 — balanced for most tablets. 120 may saturate high-res panel pipelines.
         self.hiDPI = defaults.bool(forKey: keyPrefix + "hiDPI")
@@ -1630,13 +1631,13 @@ class DisplaySettings: ObservableObject {
     func resetToDefaults() {
         let keys = ["resolution", "refreshRate", "hiDPI", "bitrate", "quality",
                     "gamingBoost", "port", "rotation", "showAllResolutions",
-                    "customWidth", "customHeight", "touchEnabled"]
+                    "customWidth", "customHeight", "touchEnabled", "connectionMode"]
         for key in keys {
             defaults.removeObject(forKey: keyPrefix + key)
         }
 
         resolution = "1920x1200"
-        refreshRate = 120  // Default: highest FPS
+        refreshRate = 60  // Default: balanced for most tablets.
         hiDPI = false
         bitrate = 1000  // Default: 1000 Mbps
         quality = "ultralow"  // Default: fastest encoding
@@ -1647,6 +1648,7 @@ class DisplaySettings: ObservableObject {
         customWidth = 1920
         customHeight = 1200
         touchEnabled = true
+        connectionMode = .usb
 
         print("Settings reset to defaults")
     }

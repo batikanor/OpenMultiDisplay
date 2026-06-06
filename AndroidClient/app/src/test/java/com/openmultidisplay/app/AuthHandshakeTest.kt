@@ -3,6 +3,7 @@ package com.openmultidisplay.app
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertThrows
 import org.junit.Test
 
 class AuthHandshakeTest {
@@ -21,21 +22,41 @@ class AuthHandshakeTest {
     @Test
     fun rejectsNameLongerThan64() {
         val longName = "x".repeat(65)
-        try {
+
+        assertThrows(IllegalArgumentException::class.java) {
             AuthHandshake.encodeRequest(ByteArray(32), longName)
-            error("expected IllegalArgumentException")
-        } catch (e: IllegalArgumentException) {
-            // OK
         }
     }
 
     @Test
     fun rejectsTokenWrongSize() {
-        try {
+        assertThrows(IllegalArgumentException::class.java) {
             AuthHandshake.encodeRequest(ByteArray(31), "x")
-            error("expected IllegalArgumentException")
-        } catch (e: IllegalArgumentException) {
-            // OK
+        }
+    }
+
+    @Test
+    fun acceptsNameWithExactly64Utf8Bytes() {
+        val name = "x".repeat(64)
+        val encoded = AuthHandshake.encodeRequest(ByteArray(32), name)
+
+        assertEquals(37 + 64, encoded.size)
+        assertEquals(64, encoded[36].toInt())
+    }
+
+    @Test
+    fun rejectsEmptyName() {
+        assertThrows(IllegalArgumentException::class.java) {
+            AuthHandshake.encodeRequest(ByteArray(32), "")
+        }
+    }
+
+    @Test
+    fun rejectsUnicodeNameLongerThan64Utf8Bytes() {
+        val name = "🙂".repeat(17)
+
+        assertThrows(IllegalArgumentException::class.java) {
+            AuthHandshake.encodeRequest(ByteArray(32), name)
         }
     }
 
@@ -54,6 +75,18 @@ class AuthHandshakeTest {
     @Test
     fun parseInvalidMagicResponseReturnsNull() {
         val r = AuthHandshake.parseResponse(byteArrayOf(0x58, 0x58, 0x58, 0x58, 0x00))
+        assertNull(r)
+    }
+
+    @Test
+    fun parseTruncatedResponseReturnsNull() {
+        val r = AuthHandshake.parseResponse(byteArrayOf(0x53, 0x53, 0x57, 0x52))
+        assertNull(r)
+    }
+
+    @Test
+    fun parseUnknownResponseStatusReturnsNull() {
+        val r = AuthHandshake.parseResponse(byteArrayOf(0x53, 0x53, 0x57, 0x52, 0x7F))
         assertNull(r)
     }
 }

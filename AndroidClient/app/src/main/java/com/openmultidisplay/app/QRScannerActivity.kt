@@ -76,7 +76,11 @@ class QRScannerActivity : AppCompatActivity() {
                     alreadyDelivered = true
                     val parsed = PairingURL.parse(raw)
                     if (parsed == null) {
-                        Toast.makeText(this, "Invalid QR, expected OpenMultiDisplay pairing code", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            this,
+                            "Invalid QR, expected OpenMultiDisplay pairing code",
+                            Toast.LENGTH_SHORT,
+                        ).show()
                         alreadyDelivered = false
                     } else {
                         setResult(RESULT_OK, Intent().putExtra(EXTRA_URL, raw))

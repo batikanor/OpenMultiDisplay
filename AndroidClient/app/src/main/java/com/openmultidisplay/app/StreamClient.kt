@@ -263,7 +263,7 @@ class StreamClient(
 
     private fun advertiseFrameMetadataSupport() {
         outputStream?.let { out ->
-            out.writeByte(MESSAGE_CLIENT_SUPPORTS_FRAME_METADATA)
+            out.write(WireProtocol.encodeClientMetadataSupport())
             out.flush()
             diagLog("Advertised frame metadata support")
         }
@@ -278,15 +278,15 @@ class StreamClient(
                     val type = input.readByte()
 
                     when (type.toInt()) {
-                        MESSAGE_VIDEO_FRAME -> {
+                        WireProtocol.MESSAGE_VIDEO_FRAME -> {
                             receiveVideoFrame(input, hasMetadata = false)
                         }
 
-                        MESSAGE_VIDEO_FRAME_WITH_METADATA -> {
+                        WireProtocol.MESSAGE_VIDEO_FRAME_WITH_METADATA -> {
                             receiveVideoFrame(input, hasMetadata = true)
                         }
 
-                        1 -> { // Display size + rotation
+                        WireProtocol.MESSAGE_DISPLAY_CONFIG -> {
                             val width = input.readInt()
                             val height = input.readInt()
                             val rotation = input.readInt()
@@ -333,19 +333,7 @@ class StreamClient(
         touchScope.launch {
             try {
                 socket?.getOutputStream()?.let { out ->
-                    val count = pointerCount.coerceIn(1, 2)
-                    val size = 6 + count * 8 // 1 type + 1 count + N*(4x+4y) + 4 action
-                    val buffer = ByteBuffer.allocate(size).order(ByteOrder.LITTLE_ENDIAN)
-                    buffer.put(2.toByte())
-                    buffer.put(count.toByte())
-                    buffer.putFloat(x)
-                    buffer.putFloat(y)
-                    if (count == 2) {
-                        buffer.putFloat(x2)
-                        buffer.putFloat(y2)
-                    }
-                    buffer.putInt(action)
-                    out.write(buffer.array())
+                    out.write(WireProtocol.encodeTouch(x, y, action, pointerCount, x2, y2))
                     out.flush()
                 }
             } catch (_: Exception) {
@@ -384,12 +372,11 @@ class StreamClient(
             }
         if (!shouldSend) return
 
-        val flags = if (force) KEYFRAME_REQUEST_FLAG_FORCE else 0
         diagLog("Requesting keyframe: reason=$reason, force=$force")
         touchScope.launch {
             try {
                 outputStream?.let { out ->
-                    out.write(byteArrayOf(MESSAGE_KEYFRAME_REQUEST.toByte(), flags.toByte()))
+                    out.write(WireProtocol.encodeKeyframeRequest(force))
                     out.flush()
                 }
             } catch (_: Exception) {
@@ -405,10 +392,7 @@ class StreamClient(
         touchScope.launch {
             try {
                 socket?.getOutputStream()?.let { out ->
-                    val buffer = ByteBuffer.allocate(9).order(ByteOrder.LITTLE_ENDIAN)
-                    buffer.put(4.toByte()) // Type 4: ping
-                    buffer.putLong(System.nanoTime())
-                    out.write(buffer.array())
+                    out.write(WireProtocol.encodePing(System.nanoTime()))
                     out.flush()
                 }
             } catch (_: Exception) {
@@ -448,7 +432,7 @@ class StreamClient(
         if (hasMetadata) {
             val flags = input.readUnsignedByte()
             input.readLong() // Host capture timestamp; clocks are not comparable with Android.
-            isKeyframe = (flags and FRAME_FLAG_KEYFRAME) != 0
+            isKeyframe = (flags and WireProtocol.FRAME_FLAG_KEYFRAME) != 0
         }
 
         val frameData = acquireBuffer(frameSize)
@@ -541,12 +525,6 @@ class StreamClient(
         private const val MAX_FRAME_SIZE = 5 * 1024 * 1024 // 5MB
         private const val KEYFRAME_REQUEST_INTERVAL_NS = 500_000_000L
         private const val KEYFRAME_STALE_INTERVAL_NS = 1_500_000_000L
-        private const val MESSAGE_VIDEO_FRAME = 0
-        private const val MESSAGE_VIDEO_FRAME_WITH_METADATA = 6
-        private const val MESSAGE_KEYFRAME_REQUEST = 7
-        private const val MESSAGE_CLIENT_SUPPORTS_FRAME_METADATA = 8
-        private const val FRAME_FLAG_KEYFRAME = 1
-        private const val KEYFRAME_REQUEST_FLAG_FORCE = 1
 
         private fun isHevcSyncFrame(
             data: ByteArray,

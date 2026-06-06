@@ -1,6 +1,6 @@
 ---
 name: Feature Request
-about: Suggest a TetherSpan improvement
+about: Suggest an OpenMultiDisplay improvement
 title: '[Feature] '
 labels: enhancement
 assignees: ''
@@ -12,7 +12,7 @@ What workflow should this improve?
 
 ## Proposal
 
-What should TetherSpan do?
+What should OpenMultiDisplay do?
 
 ## Devices
 

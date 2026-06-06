@@ -12,6 +12,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Test
+        run: |
+          cd MacHost
+          swift test
+
       - name: Build (Universal Binary)
         run: |
           cd MacHost
@@ -19,9 +24,9 @@ jobs:
           swift build -c release --arch x86_64
           mkdir -p .build/release-universal
           lipo -create \
-            .build/arm64-apple-macosx/release/TetherSpan \
-            .build/x86_64-apple-macosx/release/TetherSpan \
-            -output .build/release-universal/TetherSpan
+            .build/arm64-apple-macosx/release/OpenMultiDisplay \
+            .build/x86_64-apple-macosx/release/OpenMultiDisplay \
+            -output .build/release-universal/OpenMultiDisplay
 
       - name: Lint
         run: |

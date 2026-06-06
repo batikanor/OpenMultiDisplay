@@ -1,17 +1,6 @@
 import Foundation
 import Network
 
-private enum WireMessage {
-    static let legacyVideoFrame: UInt8 = 0
-    static let displayConfig: UInt8 = 1
-    static let touchEvent: UInt8 = 2
-    static let ping: UInt8 = 4
-    static let pong: UInt8 = 5
-    static let videoFrameWithMetadata: UInt8 = 6
-    static let keyframeRequest: UInt8 = 7
-    static let clientSupportsFrameMetadata: UInt8 = 8
-}
-
 private extension NWEndpoint {
     var isLoopback: Bool {
         switch self {
@@ -269,11 +258,11 @@ class StreamingServer {
     }
 
     private func sendDisplaySize(to session: ClientSession) {
-        var data = Data()
-        data.append(WireMessage.displayConfig)
-        data.append(contentsOf: withUnsafeBytes(of: Int32(displayWidth).bigEndian) { Data($0) })
-        data.append(contentsOf: withUnsafeBytes(of: Int32(displayHeight).bigEndian) { Data($0) })
-        data.append(contentsOf: withUnsafeBytes(of: Int32(rotation).bigEndian) { Data($0) })
+        let data = WireCodec.displayConfigPacket(
+            width: displayWidth,
+            height: displayHeight,
+            rotation: rotation
+        )
 
         session.connection.send(content: data, completion: .contentProcessed { _ in })
         debugLog("Sent display config to \(session.id): \(displayWidth)x\(displayHeight) @ \(rotation)deg")
@@ -324,19 +313,18 @@ class StreamingServer {
     private func processInputBuffer(for session: ClientSession) {
         while let msgType = session.inputBuffer.first {
             switch msgType {
-            case WireMessage.touchEvent:
+            case WireMessageType.touchEvent:
                 // Touch event: 1 type + 1 pointerCount + N*(4x+4y) + 4 action.
                 // 1 finger: 14 bytes, 2 fingers: 22 bytes.
                 guard session.inputBuffer.count >= 2 else { return }
 
                 let pointerCount = Int(inputByte(in: session, at: 1))
-                guard pointerCount == 1 || pointerCount == 2 else {
+                guard let expectedSize = WireCodec.touchEventLength(pointerCount: pointerCount) else {
                     debugLog("Invalid touch pointer count: \(pointerCount)")
                     consumeInputBytes(1, in: session)
                     continue
                 }
 
-                let expectedSize = 2 + pointerCount * 8 + 4
                 guard session.inputBuffer.count >= expectedSize else { return }
 
                 let message = Data(session.inputBuffer.prefix(expectedSize))
@@ -345,31 +333,29 @@ class StreamingServer {
                 // Drop early if host has touch disabled, after consuming exactly
                 // this touch frame so coalesced ping/keyframe messages survive.
                 if touchEnabled {
-                    handleTouchMessage(message, pointerCount: pointerCount)
+                    handleTouchMessage(message)
                 }
 
-            case WireMessage.ping:
+            case WireMessageType.ping:
                 // Ping from client: echo back as pong (type=5) with client's timestamp.
                 guard session.inputBuffer.count >= 9 else { return }
 
                 let clientTimestamp = Data(session.inputBuffer.dropFirst().prefix(8))
                 consumeInputBytes(9, in: session)
 
-                var pong = Data(capacity: 9)
-                pong.append(WireMessage.pong)
-                pong.append(clientTimestamp)
+                let pong = WireCodec.pongPacket(clientTimestamp: clientTimestamp)
                 session.connection.send(content: pong, completion: .contentProcessed { _ in })
 
-            case WireMessage.keyframeRequest:
+            case WireMessageType.keyframeRequest:
                 // Keyframe request from Android decoder. The client sends a
                 // two-byte message: type + flags.
                 guard session.inputBuffer.count >= 2 else { return }
 
-                let flags = inputByte(in: session, at: 1)
+                let isForced = WireCodec.keyframeRequestIsForced(Data(session.inputBuffer.prefix(2))) ?? false
                 consumeInputBytes(2, in: session)
-                onKeyframeRequested?((flags & 1) != 0)
+                onKeyframeRequested?(isForced)
 
-            case WireMessage.clientSupportsFrameMetadata:
+            case WireMessageType.clientSupportsFrameMetadata:
                 // One-byte opt-in from newer clients. Keeping this payload-free
                 // lets older hosts safely ignore it without misaligning input.
                 consumeInputBytes(1, in: session)
@@ -386,22 +372,21 @@ class StreamingServer {
         }
     }
 
-    private func handleTouchMessage(_ data: Data, pointerCount: Int) {
-        let x1 = data.withUnsafeBytes { $0.loadUnaligned(fromByteOffset: 2, as: Float.self) }
-        let y1 = data.withUnsafeBytes { $0.loadUnaligned(fromByteOffset: 6, as: Float.self) }
-
-        var x2: Float = 0
-        var y2: Float = 0
-        if pointerCount >= 2 {
-            x2 = data.withUnsafeBytes { $0.loadUnaligned(fromByteOffset: 10, as: Float.self) }
-            y2 = data.withUnsafeBytes { $0.loadUnaligned(fromByteOffset: 14, as: Float.self) }
+    private func handleTouchMessage(_ data: Data) {
+        guard let touchEvent = WireCodec.parseTouchEvent(data) else {
+            debugLog("Malformed touch event")
+            return
         }
 
-        let actionOffset = 2 + pointerCount * 8
-        let action = data.withUnsafeBytes { $0.loadUnaligned(fromByteOffset: actionOffset, as: Int32.self) }
-
         DispatchQueue.main.async {
-            self.onTouchEvent?(x1, y1, Int(action), pointerCount, x2, y2)
+            self.onTouchEvent?(
+                touchEvent.x1,
+                touchEvent.y1,
+                touchEvent.action,
+                touchEvent.pointerCount,
+                touchEvent.x2,
+                touchEvent.y2
+            )
         }
     }
 
@@ -459,29 +444,14 @@ class StreamingServer {
     }
 
     private func makeFramePacket(_ data: Data, timestamp: UInt64, isKeyframe: Bool, clientSupportsFrameMetadata: Bool) -> Data {
-        if clientSupportsFrameMetadata {
-            var packet = Data(capacity: data.count + 14)
-            packet.append(WireMessage.videoFrameWithMetadata)
-            appendFrameSize(data.count, to: &packet)
-            packet.append(isKeyframe ? 1 : 0)
-            var captureTimestamp = timestamp.bigEndian
-            withUnsafeBytes(of: &captureTimestamp) { packet.append(contentsOf: $0) }
-            packet.append(data)
-            return packet
-        }
-
         // Keep legacy frame type 0 for clients that do not advertise
         // metadata support; remove after legacy clients age out.
-        var packet = Data(capacity: data.count + 5)
-        packet.append(WireMessage.legacyVideoFrame)
-        appendFrameSize(data.count, to: &packet)
-        packet.append(data)
-        return packet
-    }
-
-    private func appendFrameSize(_ size: Int, to packet: inout Data) {
-        var frameSize = Int32(size).bigEndian
-        withUnsafeBytes(of: &frameSize) { packet.append(contentsOf: $0) }
+        return WireCodec.videoFramePacket(
+            payload: data,
+            timestamp: timestamp,
+            isKeyframe: isKeyframe,
+            clientSupportsFrameMetadata: clientSupportsFrameMetadata
+        )
     }
 
     // Pipeline profiling: track frame age at send time.

@@ -16,6 +16,7 @@ Build the Mac host:
 
 ```bash
 cd MacHost
+swift test
 swift build
 ```
 
@@ -23,6 +24,7 @@ Build the Android receiver:
 
 ```bash
 cd AndroidClient
+./gradlew testDebugUnitTest
 ./gradlew assembleDebug
 ```
 
@@ -37,7 +39,9 @@ cd AndroidClient
 
 ## Pull Request Checklist
 
+- [ ] macOS host tests pass with `swift test`
 - [ ] macOS host builds with `swift build`
+- [ ] Android receiver unit tests pass with `./gradlew testDebugUnitTest`
 - [ ] Android receiver builds, or the change does not affect Android
 - [ ] USB behavior was tested or the risk is documented
 - [ ] Multi-device behavior was tested when relevant
