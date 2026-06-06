@@ -6,7 +6,7 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 cd "$ROOT_DIR"
 
-echo "Installing SideScreen Multi..."
+echo "Installing TetherSpan..."
 echo ""
 
 # Prefer Homebrew OpenJDK, then Android Studio's bundled JDK, then caller-provided JAVA_HOME.
@@ -47,14 +47,14 @@ echo "  ✓ macOS app built"
 
 # Create macOS .app bundle
 echo "📦 Creating macOS .app bundle..."
-APP_NAME="SideScreen Multi.app"
+APP_NAME="TetherSpan.app"
 APP_DIR="$APP_NAME/Contents"
 rm -rf "$APP_NAME"
 mkdir -p "$APP_DIR/MacOS"
 mkdir -p "$APP_DIR/Resources"
 
 # Copy executable
-cp MacHost/.build/release/SideScreen "$APP_DIR/MacOS/SideScreen"
+cp MacHost/.build/release/TetherSpan "$APP_DIR/MacOS/TetherSpan"
 
 # Create Info.plist
 cat > "$APP_DIR/Info.plist" << 'PLIST'
@@ -63,17 +63,17 @@ cat > "$APP_DIR/Info.plist" << 'PLIST'
 <plist version="1.0">
 <dict>
     <key>CFBundleName</key>
-    <string>SideScreen Multi</string>
+    <string>TetherSpan</string>
     <key>CFBundleDisplayName</key>
-    <string>SideScreen Multi</string>
+    <string>TetherSpan</string>
     <key>CFBundleIdentifier</key>
-    <string>com.batikanor.sidescreenmulti</string>
+    <string>com.batikanor.tetherspan</string>
     <key>CFBundleVersion</key>
     <string>1.0</string>
     <key>CFBundleShortVersionString</key>
     <string>1.0</string>
     <key>CFBundleExecutable</key>
-    <string>SideScreen</string>
+    <string>TetherSpan</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>LSMinimumSystemVersion</key>
@@ -138,9 +138,9 @@ echo "✅ Installation complete!"
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "To start streaming:"
-echo "  1. Start Mac app: open 'SideScreen Multi.app'"
-echo "     (or run: MacHost/.build/release/SideScreen)"
-echo "  2. Open 'SideScreen Multi' app on Android"
+echo "  1. Start Mac app: open 'TetherSpan.app'"
+echo "     (or run: MacHost/.build/release/TetherSpan)"
+echo "  2. Open 'TetherSpan' app on Android"
 echo "  3. Tap Connect"
 echo ""
 echo "💡 Troubleshooting:"

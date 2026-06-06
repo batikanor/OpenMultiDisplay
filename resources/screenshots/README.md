@@ -1,6 +1,6 @@
 # Screenshots Guide
 
-Hướng dẫn capture screenshots đẹp cho Side Screen.
+Hướng dẫn capture screenshots đẹp cho TetherSpan.
 
 ---
 
@@ -108,7 +108,7 @@ adb pull /sdcard/screenshot.png settings-android.png
 ## Màu sắc & Style
 
 **Palette:**
-- Primary: #007AFF (Apple Blue)
+- Primary: #00B8A9 (TetherSpan Teal)
 - Background: #FAFAFA hoặc #1D1D1F (dark)
 - Text overlay: White với shadow
 

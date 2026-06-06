@@ -1,6 +1,6 @@
 # Contributing
 
-SideScreen Multi is an early fork of SideScreen. Contributions should keep the project focused on reliable Android receivers for macOS, especially USB-first multi-device workflows.
+TetherSpan is an early fork of SideScreen. Contributions should keep the project focused on reliable Android receivers for macOS, especially USB-first multi-device workflows.
 
 ## Development Setup
 

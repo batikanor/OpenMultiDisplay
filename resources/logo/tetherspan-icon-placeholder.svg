@@ -18,8 +18,8 @@
   <!-- Gradient definition -->
   <defs>
     <linearGradient id="gradient" x1="0" y1="0" x2="512" y2="512">
-      <stop offset="0%" stop-color="#007AFF"/>
-      <stop offset="100%" stop-color="#5856D6"/>
+      <stop offset="0%" stop-color="#00B8A9"/>
+      <stop offset="100%" stop-color="#FF9F3F"/>
     </linearGradient>
   </defs>
 </svg>

@@ -1,6 +1,6 @@
 ---
 name: Feature Request
-about: Suggest a SideScreen Multi improvement
+about: Suggest a TetherSpan improvement
 title: '[Feature] '
 labels: enhancement
 assignees: ''
@@ -12,7 +12,7 @@ What workflow should this improve?
 
 ## Proposal
 
-What should SideScreen Multi do?
+What should TetherSpan do?
 
 ## Devices
 

@@ -5,13 +5,13 @@ import ApplicationServices
 import os.log
 @preconcurrency import ScreenCaptureKit
 
-// Debug file logger - writes to /tmp/sidescreen.log
+// Debug file logger - writes to /tmp/tetherspan.log
 func debugLog(_ message: String) {
     let timestamp = DateFormatter.localizedString(from: Date(), dateStyle: .none, timeStyle: .medium)
     let line = "[\(timestamp)] \(message)\n"
     print(message)
     if let data = line.data(using: .utf8) {
-        let url = URL(fileURLWithPath: "/tmp/sidescreen.log")
+        let url = URL(fileURLWithPath: "/tmp/tetherspan.log")
         if let handle = try? FileHandle(forWritingTo: url) {
             handle.seekToEndOfFile()
             handle.write(data)
@@ -127,10 +127,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let port = Int(settings.port)
         Task.detached { [weak self] in
             let devices = StatusDetector.usbDevices()
+            let deviceInfos = StatusDetector.usbDeviceInfos()
             let reverseOK = StatusDetector.adbReverseConfigured(port: port)
             await MainActor.run { [weak self] in
                 guard let self = self else { return }
                 self.settings.usbDeviceConnected = !devices.isEmpty
+                self.settings.usbDeviceInfos = deviceInfos
                 self.settings.adbReverseConfigured = reverseOK
             }
         }
@@ -596,7 +598,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             let devices = StatusDetector.usbDeviceInfos()
             guard !devices.isEmpty else {
                 throw NSError(
-                    domain: "SideScreenMulti",
+                    domain: "TetherSpan",
                     code: 10,
                     userInfo: [NSLocalizedDescriptionKey: "No authorized Android USB devices found. Unlock each device and accept the USB debugging prompt."]
                 )
@@ -615,7 +617,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 let hostPortValue = basePort + index
                 guard hostPortValue <= Int(UInt16.max) else {
                     throw NSError(
-                        domain: "SideScreenMulti",
+                        domain: "TetherSpan",
                         code: 11,
                         userInfo: [NSLocalizedDescriptionKey: "Configured base port \(basePort) leaves no room for \(devices.count) USB displays."]
                     )
@@ -636,7 +638,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             let reverseOK = await setupADBReverse(for: specs)
             guard reverseOK else {
                 throw NSError(
-                    domain: "SideScreenMulti",
+                    domain: "TetherSpan",
                     code: 12,
                     userInfo: [NSLocalizedDescriptionKey: "Failed to configure ADB reverse for every connected USB device."]
                 )
@@ -730,7 +732,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 height: size.height,
                 refreshRate: settings.refreshRate,
                 hiDPI: settings.hiDPI,
-                name: "SideScreen Multi"
+                name: "TetherSpan"
             )
 
             // Disable mirror mode (may fail if already in extend mode)

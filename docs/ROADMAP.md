@@ -6,7 +6,7 @@
 - [x] Create fork identity and separate app IDs.
 - [x] Run ADB reverse setup per authorized USB device.
 - [x] Keep multiple receiver connections alive in `StreamingServer`.
-- [ ] Test with two physical Android devices attached over USB.
+- [x] Test with two physical Android devices attached over USB.
 
 ## Phase 2: Independent Displays
 
@@ -17,12 +17,12 @@
 - [x] Route frames, stats, and keyframe requests per pipeline.
 - [x] Route touch input to the owning virtual display.
 - [x] Add per-device display profiles keyed by ADB serial.
-- [ ] Add a SwiftUI editor for per-device display profiles.
+- [x] Add a SwiftUI editor for per-device display profiles.
 
 ## Phase 3: Product Quality
 
 - [ ] Add integration tests for multi-client connection behavior.
-- [ ] Add packaging that does not overwrite upstream SideScreen.
+- [x] Add packaging that does not overwrite upstream SideScreen.
 - [ ] Add release checks for macOS and Android artifacts.
 - [ ] Add performance presets for common devices.
-- [ ] Validate with Galaxy Tab S7 and Galaxy Z Fold 4.
+- [x] Validate with Galaxy Tab S7 and Galaxy Z Fold 4.

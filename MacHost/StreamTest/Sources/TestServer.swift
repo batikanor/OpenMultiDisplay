@@ -1,7 +1,7 @@
 import Foundation
 import Network
 
-/// Minimal TCP server that matches SideScreen's protocol exactly
+/// Minimal TCP server that matches TetherSpan's protocol exactly
 /// Protocol:
 ///   Display config: [type=1][width:4B BE][height:4B BE][rotation:4B BE]
 ///   Video metadata: [type=6][size:4B BE][flags:1B][timestamp:8B BE][H.265 data]
@@ -94,7 +94,7 @@ class TestServer {
         print("[OK] Sent display config: \(width)x\(height) @ \(rotation) deg")
     }
 
-    /// Send a video frame (same protocol as SideScreen)
+    /// Send a video frame (same protocol as TetherSpan)
     func sendFrame(_ data: Data, isKeyframe: Bool) {
         guard let connection = connection, isClientConnected else { return }
 

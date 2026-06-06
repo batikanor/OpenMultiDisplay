@@ -99,7 +99,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="80%"
-                android:textColor="#4CAF50"
+                android:textColor="@color/brand_primary"
                 android:textSize="15sp"
                 android:layout_marginBottom="12dp" />
 
@@ -112,7 +112,7 @@
                 android:value="0.8"
                 android:stepSize="0.05"
                 app:thumbColor="#FFFFFF"
-                app:trackColorActive="#4CAF50"
+                app:trackColorActive="@color/brand_primary"
                 app:trackColorInactive="#33FFFFFF"
                 app:trackHeight="4dp" />
         </LinearLayout>
@@ -159,7 +159,7 @@
                         android:textSize="18sp"
                         android:layout_marginEnd="3dp"
                         app:cornerRadius="10dp"
-                        app:strokeColor="#4CAF50"
+                        app:strokeColor="@color/brand_primary"
                         app:strokeWidth="1dp" />
 
                     <com.google.android.material.button.MaterialButton
@@ -174,7 +174,7 @@
                         android:layout_marginStart="3dp"
                         android:layout_marginEnd="3dp"
                         app:cornerRadius="10dp"
-                        app:strokeColor="#4CAF50"
+                        app:strokeColor="@color/brand_primary"
                         app:strokeWidth="1dp" />
 
                     <com.google.android.material.button.MaterialButton
@@ -188,7 +188,7 @@
                         android:textSize="18sp"
                         android:layout_marginStart="3dp"
                         app:cornerRadius="10dp"
-                        app:strokeColor="#4CAF50"
+                        app:strokeColor="@color/brand_primary"
                         app:strokeWidth="1dp" />
                 </LinearLayout>
 
@@ -210,7 +210,7 @@
                         android:textSize="18sp"
                         android:layout_marginEnd="3dp"
                         app:cornerRadius="10dp"
-                        app:strokeColor="#4CAF50"
+                        app:strokeColor="@color/brand_primary"
                         app:strokeWidth="1dp" />
 
                     <!-- Empty center space -->
@@ -232,7 +232,7 @@
                         android:textSize="18sp"
                         android:layout_marginStart="3dp"
                         app:cornerRadius="10dp"
-                        app:strokeColor="#4CAF50"
+                        app:strokeColor="@color/brand_primary"
                         app:strokeWidth="1dp" />
                 </LinearLayout>
 
@@ -253,7 +253,7 @@
                         android:textSize="18sp"
                         android:layout_marginEnd="3dp"
                         app:cornerRadius="10dp"
-                        app:strokeColor="#4CAF50"
+                        app:strokeColor="@color/brand_primary"
                         app:strokeWidth="1dp" />
 
                     <com.google.android.material.button.MaterialButton
@@ -268,7 +268,7 @@
                         android:layout_marginStart="3dp"
                         android:layout_marginEnd="3dp"
                         app:cornerRadius="10dp"
-                        app:strokeColor="#4CAF50"
+                        app:strokeColor="@color/brand_primary"
                         app:strokeWidth="1dp" />
 
                     <com.google.android.material.button.MaterialButton
@@ -282,7 +282,7 @@
                         android:textSize="18sp"
                         android:layout_marginStart="3dp"
                         app:cornerRadius="10dp"
-                        app:strokeColor="#4CAF50"
+                        app:strokeColor="@color/brand_primary"
                         app:strokeWidth="1dp" />
                 </LinearLayout>
 
@@ -356,7 +356,7 @@
             android:textStyle="bold"
             android:layout_marginTop="16dp"
             app:cornerRadius="16dp"
-            app:backgroundTint="#4CAF50" />
+            app:backgroundTint="@color/brand_primary" />
 
     </LinearLayout>
     </ScrollView>

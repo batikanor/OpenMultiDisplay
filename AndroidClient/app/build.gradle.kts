@@ -8,11 +8,11 @@ val versionParts = appVersion.split(".")
 val computedVersionCode = versionParts[0].toInt() * 10000 + versionParts[1].toInt() * 100 + versionParts[2].toInt()
 
 android {
-    namespace = "com.sidescreen.app"
+    namespace = "com.tetherspan.app"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.batikanor.sidescreenmulti"
+        applicationId = "com.batikanor.tetherspan"
         minSdk = 26
         targetSdk = 34
         versionCode = computedVersionCode

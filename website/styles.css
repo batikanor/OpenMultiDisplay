@@ -1,15 +1,15 @@
 /* ========================================
-   Side Screen - Landing Page Styles
+   TetherSpan - Landing Page Styles
    Lean, DockDoor-inspired layout
    ======================================== */
 
 /* CSS Variables - Light Mode (Default) */
 :root {
-    --color-primary: #007AFF;
-    --color-primary-dark: #0056CC;
-    --color-secondary: #5856D6;
-    --color-success: #34C759;
-    --color-warning: #FF9500;
+    --color-primary: #00B8A9;
+    --color-primary-dark: #006D66;
+    --color-secondary: #FF9F3F;
+    --color-success: #2EBD85;
+    --color-warning: #F59E0B;
     --color-danger: #FF3B30;
 
     --color-bg: #FAFAFA;
@@ -393,7 +393,7 @@ a:hover {
     font-weight: 700;
     line-height: 1.1;
     margin-bottom: 20px;
-    letter-spacing: -0.03em;
+    letter-spacing: 0;
     background: linear-gradient(135deg, var(--color-text) 0%, var(--color-text-secondary) 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;

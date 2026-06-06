@@ -1,4 +1,4 @@
-package com.sidescreen.app
+package com.tetherspan.app
 
 import android.Manifest
 import android.app.Activity

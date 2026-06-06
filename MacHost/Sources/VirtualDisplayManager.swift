@@ -235,22 +235,22 @@ class VirtualDisplayManager {
     func saveDisplayPosition() {
         guard let position = getDisplayPosition() else { return }
         let defaults = UserDefaults.standard
-        defaults.set(Int(position.x), forKey: "SideScreen_positionX")
-        defaults.set(Int(position.y), forKey: "SideScreen_positionY")
-        defaults.set(true, forKey: "SideScreen_hasPosition")
+        defaults.set(Int(position.x), forKey: "TetherSpan_positionX")
+        defaults.set(Int(position.y), forKey: "TetherSpan_positionY")
+        defaults.set(true, forKey: "TetherSpan_hasPosition")
         print("💾 Saved display position: (\(Int(position.x)), \(Int(position.y)))")
     }
 
     /// Restore saved display position
     func restoreDisplayPosition() {
         let defaults = UserDefaults.standard
-        guard defaults.bool(forKey: "SideScreen_hasPosition") else {
+        guard defaults.bool(forKey: "TetherSpan_hasPosition") else {
             print("📍 No saved display position found")
             return
         }
 
-        let x = defaults.integer(forKey: "SideScreen_positionX")
-        let y = defaults.integer(forKey: "SideScreen_positionY")
+        let x = defaults.integer(forKey: "TetherSpan_positionX")
+        let y = defaults.integer(forKey: "TetherSpan_positionY")
 
         do {
             try setDisplayPosition(x: Int32(x), y: Int32(y))

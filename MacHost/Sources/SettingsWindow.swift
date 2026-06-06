@@ -1,6 +1,17 @@
 import Cocoa
 import SwiftUI
 
+// MARK: - Brand Theme
+
+@available(macOS 14.0, *)
+enum AppTheme {
+    static let primary = Color(red: 0.00, green: 0.72, blue: 0.66)
+    static let primaryDeep = Color(red: 0.02, green: 0.34, blue: 0.32)
+    static let accent = Color(red: 1.00, green: 0.64, blue: 0.25)
+    static let surface = Color(red: 0.05, green: 0.08, blue: 0.08)
+    static let surfaceRaised = Color(red: 0.08, green: 0.12, blue: 0.12)
+}
+
 // MARK: - Frosted GroupBox Component
 
 @available(macOS 14.0, *)
@@ -16,7 +27,7 @@ struct FrostedGroupBox<Content: View, Trailing: View>: View {
                 if let icon = icon {
                     Image(systemName: icon)
                         .font(.system(size: 13, weight: .semibold))
-                        .foregroundColor(.accentColor)
+                        .foregroundColor(AppTheme.primary)
                 }
                 Text(title)
                     .font(.system(size: 13, weight: .semibold))
@@ -91,12 +102,12 @@ struct SettingsView: View {
                     ZStack {
                         RoundedRectangle(cornerRadius: 12, style: .continuous)
                             .fill(LinearGradient(
-                                colors: [Color.accentColor, Color.accentColor.opacity(0.7)],
+                                colors: [AppTheme.primary, AppTheme.primaryDeep],
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing
                             ))
                             .frame(width: 48, height: 48)
-                            .shadow(color: Color.accentColor.opacity(0.3), radius: 8, y: 4)
+                            .shadow(color: AppTheme.primary.opacity(0.3), radius: 8, y: 4)
 
                         Image(systemName: "rectangle.on.rectangle")
                             .font(.system(size: 22, weight: .medium))
@@ -107,9 +118,9 @@ struct SettingsView: View {
                     .onHover { headerHovered = $0 }
 
                     VStack(alignment: .leading, spacing: 3) {
-                        Text("SideScreen Multi")
+                        Text("TetherSpan")
                             .font(.system(size: 20, weight: .bold, design: .rounded))
-                        Text("Turn your tablet into a second display")
+                        Text("USB-tethered displays for Android devices")
                             .font(.system(size: 12, weight: .medium))
                             .foregroundColor(.secondary)
                     }
@@ -131,7 +142,7 @@ struct SettingsView: View {
                         Button("Cancel", role: .cancel) { }
                         Button("Reset", role: .destructive) {
                             settings.resetToDefaults()
-                            if let window = NSApp.windows.first(where: { $0.title == "SideScreen Multi" }) {
+                            if let window = NSApp.windows.first(where: { $0.title == "TetherSpan" }) {
                                 window.center()
                             }
                         }
@@ -157,7 +168,7 @@ struct SettingsView: View {
                             }
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 8)
-                            .background(settings.connectionMode == mode ? Color.accentColor : Color.clear)
+                            .background(settings.connectionMode == mode ? AppTheme.primary : Color.clear)
                             .foregroundColor(settings.connectionMode == mode ? .white : .primary)
                             .cornerRadius(6)
                         }
@@ -276,7 +287,7 @@ struct SettingsView: View {
                                     HStack(spacing: 12) {
                                         ZStack {
                                             RoundedRectangle(cornerRadius: 4)
-                                                .stroke(Color.accentColor.opacity(0.5), lineWidth: 1)
+                                                .stroke(AppTheme.primary.opacity(0.5), lineWidth: 1)
                                                 .frame(width: 80, height: 50)
                                                 .rotationEffect(.degrees(Double(settings.rotation)))
 
@@ -311,7 +322,7 @@ struct SettingsView: View {
                                     if settings.rotation == 90 || settings.rotation == 270 {
                                         Text("Display will be in portrait mode")
                                             .font(.system(size: 10))
-                                            .foregroundColor(.accentColor)
+                                            .foregroundColor(AppTheme.primary)
                                     }
 
                                     HStack {
@@ -331,6 +342,10 @@ struct SettingsView: View {
                                 }
 
                             }
+                        }
+
+                        if settings.connectionMode == .usb {
+                            DeviceProfileSection(settings: settings)
                         }
 
                         // Refresh Rate (own block)
@@ -484,7 +499,7 @@ struct SettingsView: View {
                                         Spacer()
                                         Text("\(settings.effectiveBitrate) Mbps")
                                             .font(.system(size: 13, weight: .semibold, design: .monospaced))
-                                            .foregroundColor(.accentColor)
+                                            .foregroundColor(AppTheme.primary)
                                     }
 
                                     HStack(spacing: 6) {
@@ -713,7 +728,7 @@ struct SettingsView: View {
                                             .foregroundColor(.secondary)
                                         Text(String(format: "%.1f Mbps", settings.currentBitrate))
                                             .font(.system(size: 16, weight: .semibold))
-                                            .foregroundColor(.accentColor)
+                                            .foregroundColor(AppTheme.primary)
                                     }
                                 }
                             }
@@ -752,7 +767,7 @@ struct SettingsView: View {
                         }
                         .buttonStyle(.borderedProminent)
                         .tint(settings.hasScreenRecordingPermission
-                              ? (settings.isRunning ? .red : .accentColor)
+                              ? (settings.isRunning ? .red : AppTheme.primary)
                               : .orange)
                         .controlSize(.large)
                         .help(settings.hasScreenRecordingPermission
@@ -833,7 +848,7 @@ struct SettingsView: View {
                                 }
                         }
                         .buttonStyle(.plain)
-                        .help("Quit SideScreen Multi (Command-Q)")
+                        .help("Quit TetherSpan (Command-Q)")
                     }
                     .padding(.horizontal, 20)
                     .padding(.vertical, 14)
@@ -841,7 +856,7 @@ struct SettingsView: View {
                 }
             }
         }
-        .frame(width: 480, height: 780)
+        .frame(width: 520, height: 820)
     }
 
     /// Restart the app by launching a new instance and terminating current one
@@ -886,7 +901,7 @@ struct StatusRow: View {
                 Button(action: { showHint.toggle() }) {
                     Image(systemName: "info.circle")
                         .font(.system(size: 11))
-                        .foregroundColor(hovering ? .accentColor : .secondary)
+                        .foregroundColor(hovering ? AppTheme.primary : .secondary)
                         .frame(width: 18, height: 18)
                         .contentShape(Rectangle())
                 }
@@ -936,7 +951,7 @@ struct ResolutionRow: View {
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 6)
-            .background(isSelected ? Color.accentColor : (isHovered ? Color.primary.opacity(0.05) : Color.clear))
+            .background(isSelected ? AppTheme.primary : (isHovered ? Color.primary.opacity(0.05) : Color.clear))
             .foregroundColor(isSelected ? .white : .primary)
         }
         .buttonStyle(.plain)
@@ -964,7 +979,7 @@ struct BitrateButton: View {
                 .background {
                     if isSelected {
                         RoundedRectangle(cornerRadius: 6, style: .continuous)
-                            .fill(Color.accentColor)
+                            .fill(AppTheme.primary)
                     } else {
                         RoundedRectangle(cornerRadius: 6, style: .continuous)
                             .fill(.ultraThinMaterial)
@@ -995,21 +1010,21 @@ struct RotationButton: View {
         Button(action: action) {
             VStack(spacing: 2) {
                 RoundedRectangle(cornerRadius: 2)
-                    .stroke(isSelected ? Color.accentColor : Color.secondary.opacity(0.5), lineWidth: 1)
+                    .stroke(isSelected ? AppTheme.primary : Color.secondary.opacity(0.5), lineWidth: 1)
                     .frame(width: degrees == 90 || degrees == 270 ? 16 : 24, height: degrees == 90 || degrees == 270 ? 24 : 16)
 
                 Text("\(label)")
                     .font(.system(size: 9))
-                    .foregroundColor(isSelected ? .accentColor : .secondary)
+                    .foregroundColor(isSelected ? AppTheme.primary : .secondary)
             }
             .frame(width: 50, height: 40)
             .background {
                 if isSelected {
                     RoundedRectangle(cornerRadius: 6, style: .continuous)
-                        .fill(Color.accentColor.opacity(0.15))
+                        .fill(AppTheme.primary.opacity(0.15))
                         .overlay {
                             RoundedRectangle(cornerRadius: 6, style: .continuous)
-                                .strokeBorder(Color.accentColor, lineWidth: 1)
+                                .strokeBorder(AppTheme.primary, lineWidth: 1)
                         }
                 } else {
                     RoundedRectangle(cornerRadius: 6, style: .continuous)
@@ -1026,12 +1041,453 @@ struct RotationButton: View {
     }
 }
 
+@available(macOS 14.0, *)
+struct DeviceProfileSection: View {
+    @ObservedObject var settings: DisplaySettings
+    @State private var configs = DeviceDisplayConfigStore.load()
+    @State private var selectedSerial: String?
+    @State private var name = ""
+    @State private var resolution = "1920x1200"
+    @State private var showAllResolutions = false
+    @State private var customWidth = 1920
+    @State private var customHeight = 1200
+    @State private var refreshRate = 60
+    @State private var bitrate = 1000
+    @State private var quality = "ultralow"
+    @State private var hiDPI = false
+    @State private var rotation = 0
+    @State private var pinPosition = false
+    @State private var positionX = 0
+    @State private var positionY = 0
+    @State private var saveMessage: String?
+    @State private var saveFailed = false
+
+    private var devices: [USBDeviceInfo] {
+        settings.usbDeviceInfos
+    }
+
+    private var selectedDevice: USBDeviceInfo? {
+        guard let selectedSerial else { return nil }
+        return devices.first { $0.serial == selectedSerial }
+    }
+
+    var body: some View {
+        FrostedGroupBox(
+            title: "USB Device Profiles",
+            icon: "slider.horizontal.3",
+            content: {
+                VStack(alignment: .leading, spacing: 14) {
+                    if devices.isEmpty {
+                        HStack(spacing: 8) {
+                            Image(systemName: "cable.connector.slash")
+                                .foregroundColor(.secondary)
+                            Text("Connect and authorize Android devices to edit per-device display profiles.")
+                                .font(.system(size: 11))
+                                .foregroundColor(.secondary)
+                        }
+                    } else {
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 8) {
+                                ForEach(devices, id: \.serial) { device in
+                                    DeviceProfileChip(
+                                        device: device,
+                                        isSelected: selectedSerial == device.serial,
+                                        hasSavedProfile: configs[device.serial] != nil
+                                    ) {
+                                        selectedSerial = device.serial
+                                    }
+                                }
+                            }
+                        }
+
+                        Divider()
+
+                        VStack(alignment: .leading, spacing: 12) {
+                            HStack(spacing: 10) {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text("Profile Name")
+                                        .font(.system(size: 11))
+                                        .foregroundColor(.secondary)
+                                    TextField("Device name", text: $name)
+                                        .textFieldStyle(.roundedBorder)
+                                }
+
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text("ADB Serial")
+                                        .font(.system(size: 11))
+                                        .foregroundColor(.secondary)
+                                    Text(selectedSerial.map(shortSerial) ?? "-")
+                                        .font(.system(size: 12, design: .monospaced))
+                                        .foregroundColor(.secondary)
+                                        .padding(.horizontal, 8)
+                                        .frame(height: 24)
+                                        .background(.ultraThinMaterial)
+                                        .cornerRadius(5)
+                                }
+                            }
+
+                            VStack(alignment: .leading, spacing: 8) {
+                                HStack {
+                                    Text("Resolution")
+                                        .font(.system(size: 11))
+                                        .foregroundColor(.secondary)
+                                    Spacer()
+                                    Toggle("Show all", isOn: $showAllResolutions)
+                                        .toggleStyle(.switch)
+                                        .controlSize(.mini)
+                                }
+
+                                ScrollView {
+                                    VStack(alignment: .leading, spacing: 0) {
+                                        ForEach(profileResolutionChoices, id: \.self) { res in
+                                            ResolutionRow(resolution: res, isSelected: resolution == res) {
+                                                applyResolution(res)
+                                            }
+                                        }
+                                    }
+                                }
+                                .frame(height: showAllResolutions ? 150 : 96)
+                                .background(.ultraThinMaterial)
+                                .cornerRadius(8)
+                                .overlay {
+                                    RoundedRectangle(cornerRadius: 8)
+                                        .strokeBorder(Color.primary.opacity(0.1), lineWidth: 1)
+                                }
+
+                                HStack(spacing: 8) {
+                                    TextField("W", value: $customWidth, format: .number)
+                                        .textFieldStyle(.roundedBorder)
+                                        .frame(width: 72)
+                                    Text("x")
+                                        .foregroundColor(.secondary)
+                                    TextField("H", value: $customHeight, format: .number)
+                                        .textFieldStyle(.roundedBorder)
+                                        .frame(width: 72)
+                                    Button("Use Custom") {
+                                        applyCustomResolution()
+                                    }
+                                    .buttonStyle(.bordered)
+                                    .controlSize(.small)
+                                    Spacer()
+                                }
+                            }
+
+                            HStack(spacing: 12) {
+                                VStack(alignment: .leading, spacing: 6) {
+                                    Text("Frame Rate")
+                                        .font(.system(size: 11))
+                                        .foregroundColor(.secondary)
+                                    HStack(spacing: 6) {
+                                        ForEach([30, 60, 90, 120], id: \.self) { rate in
+                                            BitrateButton(label: "\(rate)", value: rate, currentValue: refreshRate, disabled: false) {
+                                                refreshRate = rate
+                                            }
+                                        }
+                                    }
+                                }
+
+                                VStack(alignment: .leading, spacing: 6) {
+                                    Text("Bitrate")
+                                        .font(.system(size: 11))
+                                        .foregroundColor(.secondary)
+                                    TextField("Mbps", value: $bitrate, format: .number)
+                                        .textFieldStyle(.roundedBorder)
+                                        .frame(width: 88)
+                                }
+                            }
+
+                            HStack(spacing: 12) {
+                                Toggle("HiDPI", isOn: $hiDPI)
+                                    .toggleStyle(.switch)
+                                    .controlSize(.mini)
+
+                                Picker("Quality", selection: $quality) {
+                                    Text("Ultra Low").tag("ultralow")
+                                    Text("Low").tag("low")
+                                    Text("Medium").tag("medium")
+                                    Text("High").tag("high")
+                                }
+                                .pickerStyle(.segmented)
+                            }
+
+                            HStack(alignment: .top, spacing: 16) {
+                                VStack(alignment: .leading, spacing: 6) {
+                                    Text("Rotation")
+                                        .font(.system(size: 11))
+                                        .foregroundColor(.secondary)
+                                    HStack(spacing: 6) {
+                                        ForEach([0, 90, 180, 270], id: \.self) { degrees in
+                                            RotationButton(degrees: degrees, label: "\(degrees)", isSelected: rotation == degrees) {
+                                                rotation = degrees
+                                            }
+                                        }
+                                    }
+                                }
+
+                                VStack(alignment: .leading, spacing: 6) {
+                                    Toggle("Pin Arrangement", isOn: $pinPosition)
+                                        .toggleStyle(.switch)
+                                        .controlSize(.mini)
+                                    HStack(spacing: 6) {
+                                        TextField("X", value: $positionX, format: .number)
+                                            .textFieldStyle(.roundedBorder)
+                                            .frame(width: 64)
+                                            .disabled(!pinPosition)
+                                        TextField("Y", value: $positionY, format: .number)
+                                            .textFieldStyle(.roundedBorder)
+                                            .frame(width: 64)
+                                            .disabled(!pinPosition)
+                                    }
+                                }
+                            }
+
+                            HStack(spacing: 10) {
+                                Button(action: saveSelectedProfile) {
+                                    HStack(spacing: 6) {
+                                        Image(systemName: "square.and.arrow.down")
+                                        Text("Save Device Profile")
+                                    }
+                                    .frame(maxWidth: .infinity)
+                                }
+                                .buttonStyle(.borderedProminent)
+                                .tint(AppTheme.accent)
+                                .controlSize(.small)
+                                .disabled(selectedSerial == nil)
+
+                                Button("Use Current Defaults") {
+                                    loadFromCurrentDefaults()
+                                }
+                                .buttonStyle(.bordered)
+                                .controlSize(.small)
+                                .disabled(selectedSerial == nil)
+                            }
+
+                            if let saveMessage {
+                                Text(saveMessage)
+                                    .font(.system(size: 10))
+                                    .foregroundColor(saveFailed ? .red : AppTheme.primary)
+                            } else if settings.isRunning {
+                                Text("Saved profile changes apply the next time USB displays start.")
+                                    .font(.system(size: 10))
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                    }
+                }
+                .onAppear {
+                    reloadProfiles()
+                    ensureSelectedDevice()
+                }
+                .onChange(of: settings.usbDeviceInfos) { _, _ in
+                    ensureSelectedDevice()
+                }
+                .onChange(of: selectedSerial) { _, _ in
+                    loadSelectedProfile()
+                }
+            },
+            trailing: {
+                Button(action: {
+                    reloadProfiles()
+                    ensureSelectedDevice()
+                    loadSelectedProfile()
+                }) {
+                    Image(systemName: "arrow.clockwise")
+                        .font(.system(size: 12, weight: .semibold))
+                }
+                .buttonStyle(.borderless)
+                .help("Reload device profiles")
+            }
+        )
+    }
+
+    private var profileResolutionChoices: [String] {
+        showAllResolutions ? DisplaySettings.allResolutions : DisplaySettings.commonResolutions
+    }
+
+    private func reloadProfiles() {
+        configs = DeviceDisplayConfigStore.load()
+    }
+
+    private func ensureSelectedDevice() {
+        if let selectedSerial, devices.contains(where: { $0.serial == selectedSerial }) {
+            return
+        }
+        selectedSerial = devices.first?.serial
+    }
+
+    private func loadSelectedProfile() {
+        guard let selectedSerial,
+              let device = devices.first(where: { $0.serial == selectedSerial }) else { return }
+        let index = devices.firstIndex(of: device) ?? 0
+        let config = configs[selectedSerial]
+            ?? DeviceDisplayConfigStore.defaultConfig(for: device, index: index, settings: settings)
+        apply(config: config, fallbackDevice: device)
+        saveMessage = nil
+        saveFailed = false
+    }
+
+    private func apply(config: DeviceDisplayConfig, fallbackDevice: USBDeviceInfo) {
+        let width = config.width ?? settings.resolutionSize.width
+        let height = config.height ?? settings.resolutionSize.height
+        name = config.name ?? fallbackDevice.model ?? fallbackDevice.serial
+        resolution = "\(width)x\(height)"
+        customWidth = width
+        customHeight = height
+        refreshRate = config.refreshRate ?? settings.effectiveRefreshRate
+        bitrate = config.bitrate ?? settings.effectiveBitrate
+        quality = config.quality ?? settings.effectiveQuality
+        hiDPI = config.hiDPI ?? settings.hiDPI
+        rotation = config.rotation ?? settings.rotation
+        pinPosition = config.positionX != nil && config.positionY != nil
+        positionX = config.positionX ?? 0
+        positionY = config.positionY ?? 0
+    }
+
+    private func applyResolution(_ value: String) {
+        resolution = value
+        let parsed = parseResolution(value)
+        customWidth = parsed.width
+        customHeight = parsed.height
+    }
+
+    private func applyCustomResolution() {
+        guard customWidth >= 640,
+              customWidth <= 7680,
+              customHeight >= 480,
+              customHeight <= 4320 else {
+            saveMessage = "Resolution must be between 640x480 and 7680x4320."
+            saveFailed = true
+            return
+        }
+        resolution = "\(customWidth)x\(customHeight)"
+        saveMessage = nil
+        saveFailed = false
+    }
+
+    private func loadFromCurrentDefaults() {
+        let config = DeviceDisplayConfig(
+            name: name.isEmpty ? selectedDevice?.model : name,
+            width: settings.resolutionSize.width,
+            height: settings.resolutionSize.height,
+            refreshRate: settings.effectiveRefreshRate,
+            bitrate: settings.effectiveBitrate,
+            quality: settings.effectiveQuality,
+            hiDPI: settings.hiDPI,
+            rotation: settings.rotation,
+            positionX: pinPosition ? positionX : nil,
+            positionY: pinPosition ? positionY : nil
+        )
+        if let selectedDevice {
+            apply(config: config, fallbackDevice: selectedDevice)
+        }
+    }
+
+    private func saveSelectedProfile() {
+        guard let serial = selectedSerial else { return }
+        let parsed = parseResolution(resolution)
+        guard parsed.width >= 640,
+              parsed.width <= 7680,
+              parsed.height >= 480,
+              parsed.height <= 4320 else {
+            saveMessage = "Resolution must be between 640x480 and 7680x4320."
+            saveFailed = true
+            return
+        }
+        let clampedBitrate = min(max(bitrate, 20), 5000)
+        let config = DeviceDisplayConfig(
+            name: name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : name,
+            width: parsed.width,
+            height: parsed.height,
+            refreshRate: refreshRate,
+            bitrate: clampedBitrate,
+            quality: quality,
+            hiDPI: hiDPI,
+            rotation: rotation,
+            positionX: pinPosition ? positionX : nil,
+            positionY: pinPosition ? positionY : nil
+        )
+
+        do {
+            try DeviceDisplayConfigStore.save(config, for: serial)
+            configs[serial] = config
+            bitrate = clampedBitrate
+            saveMessage = settings.isRunning
+                ? "Saved. Stop and start USB displays to apply this profile."
+                : "Saved. This profile will be used on the next USB start."
+            saveFailed = false
+        } catch {
+            saveMessage = "Could not save profile: \(error.localizedDescription)"
+            saveFailed = true
+        }
+    }
+
+    private func parseResolution(_ value: String) -> (width: Int, height: Int) {
+        let parts = value.lowercased().split(separator: "x")
+        guard parts.count == 2,
+              let width = Int(parts[0].trimmingCharacters(in: .whitespaces)),
+              let height = Int(parts[1].trimmingCharacters(in: .whitespaces)) else {
+            return (customWidth, customHeight)
+        }
+        return (width, height)
+    }
+
+    private func shortSerial(_ serial: String) -> String {
+        guard serial.count > 10 else { return serial }
+        return "\(serial.prefix(5))...\(serial.suffix(4))"
+    }
+}
+
+@available(macOS 14.0, *)
+struct DeviceProfileChip: View {
+    let device: USBDeviceInfo
+    let isSelected: Bool
+    let hasSavedProfile: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 8) {
+                Image(systemName: device.model?.lowercased().contains("fold") == true ? "iphone.gen3" : "ipad")
+                    .foregroundColor(isSelected ? .white : AppTheme.primary)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(device.model ?? "Android Device")
+                        .font(.system(size: 11, weight: .semibold))
+                    Text(shortSerial(device.serial))
+                        .font(.system(size: 9, design: .monospaced))
+                        .foregroundColor(isSelected ? .white.opacity(0.75) : .secondary)
+                }
+                if hasSavedProfile {
+                    Image(systemName: "checkmark.seal.fill")
+                        .font(.system(size: 10))
+                        .foregroundColor(isSelected ? .white : AppTheme.accent)
+                }
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 8)
+            .background {
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .fill(isSelected ? AppTheme.primary : Color.primary.opacity(0.05))
+            }
+            .overlay {
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .strokeBorder(isSelected ? AppTheme.primary : Color.primary.opacity(0.08), lineWidth: 1)
+            }
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func shortSerial(_ serial: String) -> String {
+        guard serial.count > 10 else { return serial }
+        return "\(serial.prefix(5))...\(serial.suffix(4))"
+    }
+}
+
 // MARK: - Display Settings
 
 @available(macOS 14.0, *)
 class DisplaySettings: ObservableObject {
     private let defaults = UserDefaults.standard
-    private let keyPrefix = "SideScreen_"
+    private let keyPrefix = "TetherSpan_"
 
     @Published var resolution: String {
         didSet { save("resolution", resolution) }
@@ -1084,6 +1540,7 @@ class DisplaySettings: ObservableObject {
     @Published var adbInstalled = false
     @Published var adbReverseConfigured = false
     @Published var usbDeviceConnected = false
+    @Published var usbDeviceInfos: [USBDeviceInfo] = []
     @Published var wifiConnected = false
     @Published var listeningAddress: String?
     @Published var isRunning = false
@@ -1217,13 +1674,13 @@ class DisplaySettings: ObservableObject {
 class SettingsWindowController: NSWindowController, NSWindowDelegate {
     convenience init(settings: DisplaySettings) {
         let window = ConstrainedWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 480, height: 780),
+            contentRect: NSRect(x: 0, y: 0, width: 520, height: 820),
             styleMask: [.titled, .closable, .miniaturizable],
             backing: .buffered,
             defer: false
         )
 
-        window.title = "SideScreen Multi"
+        window.title = "TetherSpan"
         window.titlebarAppearsTransparent = true
         window.backgroundColor = .windowBackgroundColor
         window.isMovableByWindowBackground = true
@@ -1333,7 +1790,7 @@ struct WirelessSection: View {
                     } else {
                         Text("Generating QR…").foregroundColor(.secondary)
                     }
-                    Text("Scan this QR from SideScreen Multi Android (Wireless tab)")
+                    Text("Scan this QR from TetherSpan Android (Wireless tab)")
                         .font(.system(size: 11))
                         .foregroundColor(.secondary)
                         .multilineTextAlignment(.center)

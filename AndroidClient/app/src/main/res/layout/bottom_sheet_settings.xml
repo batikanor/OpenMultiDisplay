@@ -52,7 +52,7 @@
             android:layout_height="wrap_content"
             android:checked="true"
             app:thumbTint="#FFFFFF"
-            app:trackTint="#4CAF50" />
+            app:trackTint="@color/brand_primary" />
     </LinearLayout>
 
     <!-- Opacity Slider -->
@@ -90,7 +90,7 @@
             android:value="0.8"
             android:stepSize="0.1"
             app:thumbColor="#FFFFFF"
-            app:trackColorActive="#4CAF50"
+            app:trackColorActive="@color/brand_primary"
             app:trackColorInactive="#33FFFFFF" />
 
         <TextView
@@ -124,6 +124,6 @@
         android:textSize="16sp"
         android:textStyle="bold"
         app:cornerRadius="14dp"
-        app:backgroundTint="#4CAF50" />
+        app:backgroundTint="@color/brand_primary" />
 
 </LinearLayout>

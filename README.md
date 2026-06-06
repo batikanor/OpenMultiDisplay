@@ -1,6 +1,6 @@
-# SideScreen Multi
+# TetherSpan
 
-SideScreen Multi is an MIT-licensed fork of [SideScreen](https://github.com/tranvuongquocdat/SideScreen) focused on making Android phones and tablets useful as USB-connected macOS displays.
+TetherSpan is an MIT-licensed fork of [SideScreen](https://github.com/tranvuongquocdat/SideScreen) focused on making Android phones and tablets useful as USB-connected macOS displays.
 
 The immediate target is a MacBook with more than one Android receiver attached at the same time, for example a Galaxy Tab plus a Galaxy Z Fold.
 
@@ -17,16 +17,17 @@ What works in this fork:
 - USB mode creates one virtual display, capture pipeline, encoder, and local TCP server per connected Android device.
 - Android-side USB port stays stable at `54321`; each device maps to a unique Mac-side host port.
 - Per-device display profiles can set resolution, refresh rate, bitrate, quality, HiDPI, rotation, and arrangement position by ADB serial.
+- The macOS settings window includes a USB device profile editor for connected Android devices.
+- The multi-device USB path has been validated locally with a Galaxy Tab S7 and a Galaxy Z Fold 4 connected at the same time.
 
 What is still in progress:
 
-- A first-class SwiftUI editor for per-device profiles.
 - Release signing, notarization, and production packaging.
-- End-to-end validation with two physical Android devices.
+- More device presets and longer-duration soak testing.
 
 ## Why This Fork Exists
 
-Upstream SideScreen is designed around one active Android receiver. That is enough for a tablet-as-monitor workflow, but it does not cover multi-device desk setups. SideScreen Multi keeps the upstream foundation and extends it toward multi-receiver USB operation.
+Upstream SideScreen is designed around one active Android receiver. That is enough for a tablet-as-monitor workflow, but it does not cover multi-device desk setups. TetherSpan keeps the upstream foundation and extends it toward multi-receiver USB operation.
 
 ## Requirements
 
@@ -36,6 +37,9 @@ Upstream SideScreen is designed around one active Android receiver. That is enou
 | Android receiver | Android 8.0 or newer with H.265 hardware decode |
 | USB mode | Android platform-tools / `adb`, USB debugging enabled |
 | Build tools | Swift 5.9+, Xcode command line tools, Android Studio or JDK/Android SDK |
+
+See [docs/SUPPORT.md](docs/SUPPORT.md) for the MacBook Air / MacBook Pro
+support matrix, Apple compatibility sources, and the development machine specs.
 
 ## Build
 
@@ -66,7 +70,7 @@ adb devices -l
 ```
 
 4. Build and start the Mac host.
-5. Open SideScreen Multi on each Android device and use the USB tab.
+5. Open TetherSpan on each Android device and use the USB tab.
 
 The Mac host configures:
 
@@ -82,7 +86,7 @@ for authorized Android devices. Android keeps connecting to `127.0.0.1:54321`; t
 USB display profiles live at:
 
 ```text
-~/.sidescreen-multi/devices.json
+~/.tetherspan/devices.json
 ```
 
 Each key is an ADB serial. Example:
@@ -119,7 +123,7 @@ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) and [docs/ROADMAP.md](docs/ROAD
 
 ## Attribution
 
-SideScreen Multi is derived from SideScreen by Trần Vương Quốc Đạt and contributors. The original project is MIT licensed. The original copyright notice is preserved in [LICENSE](LICENSE), and fork-specific attribution is documented in [NOTICE](NOTICE).
+TetherSpan is derived from SideScreen by Trần Vương Quốc Đạt and contributors. The original project is MIT licensed. The original copyright notice is preserved in [LICENSE](LICENSE), and fork-specific attribution is documented in [NOTICE](NOTICE).
 
 Core contributor for this fork:
 

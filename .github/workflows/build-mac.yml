@@ -19,9 +19,9 @@ jobs:
           swift build -c release --arch x86_64
           mkdir -p .build/release-universal
           lipo -create \
-            .build/arm64-apple-macosx/release/SideScreen \
-            .build/x86_64-apple-macosx/release/SideScreen \
-            -output .build/release-universal/SideScreen
+            .build/arm64-apple-macosx/release/TetherSpan \
+            .build/x86_64-apple-macosx/release/TetherSpan \
+            -output .build/release-universal/TetherSpan
 
       - name: Lint
         run: |

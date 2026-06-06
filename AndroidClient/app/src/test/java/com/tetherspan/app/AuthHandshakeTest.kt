@@ -1,4 +1,4 @@
-package com.sidescreen.app
+package com.tetherspan.app
 
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals

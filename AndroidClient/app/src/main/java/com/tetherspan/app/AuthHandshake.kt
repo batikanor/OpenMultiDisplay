@@ -1,4 +1,4 @@
-package com.sidescreen.app
+package com.tetherspan.app
 
 object AuthHandshake {
     private val REQ_MAGIC = byteArrayOf(0x53, 0x53, 0x57, 0x41) // "SSWA"

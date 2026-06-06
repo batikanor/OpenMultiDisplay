@@ -4,7 +4,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#000000">
+    android:background="@color/brand_surface">
 
     <!-- Video Surface -->
     <SurfaceView
@@ -53,7 +53,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="--"
-                    android:textColor="#4CAF50"
+                    android:textColor="@color/brand_primary"
                     android:textSize="16sp"
                     android:textStyle="bold" />
             </LinearLayout>
@@ -75,7 +75,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="--"
-                    android:textColor="#2196F3"
+                    android:textColor="@color/brand_primary"
                     android:textSize="16sp"
                     android:textStyle="bold" />
             </LinearLayout>
@@ -97,7 +97,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="--"
-                    android:textColor="#FF9800"
+                    android:textColor="@color/brand_accent"
                     android:textSize="16sp"
                     android:textStyle="bold" />
             </LinearLayout>
@@ -187,7 +187,7 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="SideScreen Multi"
+                android:text="TetherSpan"
                 android:textColor="#FFFFFF"
                 android:textSize="28sp"
                 android:textStyle="bold"
@@ -198,7 +198,7 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Turn your tablet into a second display"
+                android:text="USB-tethered displays for Android devices"
                 android:textColor="#999999"
                 android:textSize="14sp"
                 android:gravity="center"
@@ -364,7 +364,7 @@
                 android:textSize="18sp"
                 android:textStyle="bold"
                 app:cornerRadius="20dp"
-                app:backgroundTint="#007AFF"
+                app:backgroundTint="@color/brand_primary"
                 android:layout_marginBottom="20dp" />
 
             <!-- Status Section -->
@@ -443,7 +443,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Advanced Settings"
-                android:textColor="#007AFF"
+                android:textColor="@color/brand_primary"
                 android:textSize="13sp"
                 android:gravity="center"
                 android:padding="8dp" />
@@ -474,7 +474,7 @@
                     <ProgressBar
                         android:layout_width="48dp"
                         android:layout_height="48dp"
-                        android:indeterminateTint="#4CAF50"
+                        android:indeterminateTint="@color/brand_primary"
                         android:layout_marginBottom="16dp" />
 
                     <TextView
@@ -521,7 +521,7 @@
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Open SideScreen Multi on your Mac → switch to the Wireless tab → scan the QR shown"
+                        android:text="Open TetherSpan on your Mac → switch to the Wireless tab → scan the QR shown"
                         android:textColor="#BBBBBB"
                         android:textSize="13sp"
                         android:gravity="center"
@@ -534,8 +534,8 @@
                         android:text="Scan QR Code"
                         android:textSize="16sp"
                         app:cornerRadius="16dp"
-                        app:backgroundTint="#4ade80"
-                        android:textColor="#000000" />
+                        app:backgroundTint="@color/brand_primary"
+                        android:textColor="@color/brand_surface" />
                 </LinearLayout>
 
                 <!-- State 3: Connected -->
@@ -553,7 +553,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:text="● Connected"
-                        android:textColor="#4ade80"
+                        android:textColor="@color/brand_primary"
                         android:textSize="14sp"
                         android:textStyle="bold"
                         android:gravity="center"
@@ -645,7 +645,7 @@
                         android:text="Reconnect"
                         android:textSize="16sp"
                         app:cornerRadius="16dp"
-                        app:backgroundTint="#4CAF50"
+                        app:backgroundTint="@color/brand_primary"
                         android:textColor="#FFFFFF"
                         android:layout_marginBottom="8dp" />
 
@@ -697,8 +697,8 @@
                         android:layout_height="56dp"
                         android:text="Scan QR Code"
                         app:cornerRadius="16dp"
-                        app:backgroundTint="#4ade80"
-                        android:textColor="#000000" />
+                        app:backgroundTint="@color/brand_primary"
+                        android:textColor="@color/brand_surface" />
                 </LinearLayout>
 
                 <!-- State 5: Permission denied permanently -->
@@ -725,7 +725,7 @@
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="You blocked the permission. Open Settings → Apps → SideScreen Multi → Permissions to allow."
+                        android:text="You blocked the permission. Open Settings → Apps → TetherSpan → Permissions to allow."
                         android:textColor="#BBBBBB"
                         android:textSize="13sp"
                         android:gravity="center"
@@ -737,7 +737,7 @@
                         android:layout_height="56dp"
                         android:text="Open Settings"
                         app:cornerRadius="16dp"
-                        app:backgroundTint="#007AFF" />
+                        app:backgroundTint="@color/brand_primary" />
                 </LinearLayout>
 
             </LinearLayout>

@@ -1,6 +1,6 @@
 # Website Assets
 
-Assets cho Side Screen landing page.
+Assets cho TetherSpan landing page.
 
 ---
 
@@ -8,7 +8,7 @@ Assets cho Side Screen landing page.
 
 | File | Kích thước | Nguồn |
 |------|------------|-------|
-| `icon.png` | 128x128 | Copy từ `resources/logo/sidescreen-icon.png` và resize |
+| `icon.png` | 128x128 | Copy từ `resources/logo/tetherspan-icon.png` và resize |
 | `hero-screenshot.png` | 1920x1080 | Copy từ `resources/screenshots/hero.png` |
 | `favicon.ico` | 32x32 | Generate từ icon.png |
 
@@ -37,5 +37,5 @@ Update `website/index.html`:
 
 Thay placeholder image:
 ```html
-<img src="./assets/hero-screenshot.png" alt="Side Screen Demo">
+<img src="./assets/hero-screenshot.png" alt="TetherSpan Demo">
 ```

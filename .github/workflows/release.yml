@@ -25,17 +25,17 @@ jobs:
           swift build -c release --arch x86_64
           mkdir -p .build/release-universal
           lipo -create \
-            .build/arm64-apple-macosx/release/SideScreen \
-            .build/x86_64-apple-macosx/release/SideScreen \
-            -output .build/release-universal/SideScreen
+            .build/arm64-apple-macosx/release/TetherSpan \
+            .build/x86_64-apple-macosx/release/TetherSpan \
+            -output .build/release-universal/TetherSpan
 
       - name: Create .app bundle
         run: |
           VERSION=${{ steps.version.outputs.version }}
-          APP_DIR="SideScreen Multi.app"
+          APP_DIR="TetherSpan.app"
           mkdir -p "$APP_DIR/Contents/MacOS"
           mkdir -p "$APP_DIR/Contents/Resources"
-          cp MacHost/.build/release-universal/SideScreen "$APP_DIR/Contents/MacOS/"
+          cp MacHost/.build/release-universal/TetherSpan "$APP_DIR/Contents/MacOS/"
 
           # Copy icon if exists
           if [ -f "MacHost/Resources/AppIcon.icns" ]; then
@@ -48,15 +48,15 @@ jobs:
           <plist version="1.0">
           <dict>
               <key>CFBundleExecutable</key>
-              <string>SideScreen</string>
+              <string>TetherSpan</string>
               <key>CFBundleIconFile</key>
               <string>AppIcon</string>
               <key>CFBundleIdentifier</key>
-              <string>com.batikanor.sidescreenmulti</string>
+              <string>com.batikanor.tetherspan</string>
               <key>CFBundleName</key>
-              <string>SideScreen Multi</string>
+              <string>TetherSpan</string>
               <key>CFBundleDisplayName</key>
-              <string>SideScreen Multi</string>
+              <string>TetherSpan</string>
               <key>CFBundleVersion</key>
               <string>${VERSION}</string>
               <key>CFBundleShortVersionString</key>
@@ -72,27 +72,27 @@ jobs:
               <key>NSSupportsAutomaticGraphicsSwitching</key>
               <true/>
               <key>NSScreenCaptureUsageDescription</key>
-              <string>SideScreen Multi needs screen recording access to capture your virtual display and stream it to your Android device.</string>
+              <string>TetherSpan needs screen recording access to capture your virtual display and stream it to your Android device.</string>
               <key>NSLocalNetworkUsageDescription</key>
-              <string>SideScreen Multi needs Local Network access so your Android tablet can connect to the Mac over WiFi for wireless mode. Without this, only USB-tethered connections work.</string>
+              <string>TetherSpan needs Local Network access so your Android tablet can connect to the Mac over WiFi for wireless mode. Without this, only USB-tethered connections work.</string>
               <key>NSBonjourServices</key>
               <array>
-                  <string>_sidescreen._tcp</string>
+                  <string>_tetherspan._tcp</string>
               </array>
           </dict>
           </plist>
           EOF
 
       - name: Ad-hoc code sign
-        run: codesign --force --deep --sign - "SideScreen Multi.app"
+        run: codesign --force --deep --sign - "TetherSpan.app"
 
       - name: Create DMG
         run: |
           VERSION=${{ steps.version.outputs.version }}
           mkdir -p dmg-content
-          cp -R "SideScreen Multi.app" dmg-content/
+          cp -R "TetherSpan.app" dmg-content/
           ln -s /Applications dmg-content/Applications
-          hdiutil create -volname "SideScreen Multi" -srcfolder dmg-content -ov -format UDZO "SideScreenMulti-${VERSION}-mac-universal.dmg"
+          hdiutil create -volname "TetherSpan" -srcfolder dmg-content -ov -format UDZO "TetherSpan-${VERSION}-mac-universal.dmg"
           rm -rf dmg-content
 
       - name: Upload DMG
@@ -125,7 +125,7 @@ jobs:
       - name: Rename APK
         run: |
           VERSION=${{ steps.version.outputs.version }}
-          cp AndroidClient/app/build/outputs/apk/release/app-release.apk "SideScreenMulti-${VERSION}-android.apk"
+          cp AndroidClient/app/build/outputs/apk/release/app-release.apk "TetherSpan-${VERSION}-android.apk"
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
@@ -167,7 +167,7 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          name: "SideScreen Multi v${{ steps.version.outputs.version }}"
+          name: "TetherSpan v${{ steps.version.outputs.version }}"
           body: |
             ## What's Changed
             ${{ steps.changelog.outputs.notes }}
@@ -175,11 +175,11 @@ jobs:
             ### Downloads
             | Platform | File |
             |----------|------|
-            | macOS (Universal) | `SideScreenMulti-${{ steps.version.outputs.version }}-mac-universal.dmg` |
-            | Android | `SideScreenMulti-${{ steps.version.outputs.version }}-android.apk` |
+            | macOS (Universal) | `TetherSpan-${{ steps.version.outputs.version }}-mac-universal.dmg` |
+            | Android | `TetherSpan-${{ steps.version.outputs.version }}-android.apk` |
 
             ### Installation
-            - **macOS**: Open DMG, drag to Applications. If Gatekeeper says "damaged": `sudo xattr -cr "/Applications/SideScreen Multi.app"`
+            - **macOS**: Open DMG, drag to Applications. If Gatekeeper says "damaged": `sudo xattr -cr "/Applications/TetherSpan.app"`
             - **Android**: Install APK (enable "Unknown sources" if needed)
           files: |
             artifacts/macos-dmg/*.dmg

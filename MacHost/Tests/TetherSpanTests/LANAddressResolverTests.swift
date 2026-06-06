@@ -1,5 +1,5 @@
 import XCTest
-@testable import SideScreen
+@testable import TetherSpan
 
 final class LANAddressResolverTests: XCTestCase {
     func testReturnsValidIPv4WhenOnNetwork() {

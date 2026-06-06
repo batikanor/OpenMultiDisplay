@@ -1,4 +1,4 @@
-# Screenshot Capture Guide — Side Screen
+# Screenshot Capture Guide — TetherSpan
 
 This guide describes how to capture each screenshot used in the README. Placeholder SVGs are currently in place; replace them with real screenshots following the instructions below.
 
@@ -8,12 +8,12 @@ This guide describes how to capture each screenshot used in the README. Placehol
 
 | | |
 |---|---|
-| **File** | `resources/logo/sidescreen-icon.png` |
+| **File** | `resources/logo/tetherspan-icon.png` |
 | **Size** | 128 x 128 px |
 | **Format** | PNG (transparent background preferred) |
 
 **What to capture:**
-- The Side Screen app icon at 128x128 resolution
+- The TetherSpan app icon at 128x128 resolution
 - Should have rounded corners consistent with macOS icon style
 - If you have an `.icns` or high-res source, export at 128px
 
@@ -21,7 +21,7 @@ This guide describes how to capture each screenshot used in the README. Placehol
 1. Open the app icon source file (e.g., in Figma, Sketch, or Preview)
 2. Export as PNG at 128x128
 3. Ensure transparency is preserved if the icon has rounded corners
-4. Save to `resources/logo/sidescreen-icon.png`
+4. Save to `resources/logo/tetherspan-icon.png`
 
 **Tips:**
 - Use `sips -z 128 128 icon.png` on macOS to resize if needed
@@ -38,13 +38,13 @@ This guide describes how to capture each screenshot used in the README. Placehol
 | **Format** | PNG or GIF |
 
 **What to capture:**
-- Your Mac screen with the Side Screen menu bar app running
+- Your Mac screen with the TetherSpan menu bar app running
 - An Android tablet connected via USB-C, displaying the extended screen
 - Ideally show a window being dragged from the Mac onto the tablet
 - A GIF (~5 seconds) of the drag action is ideal for maximum impact
 
 **How to capture (static):**
-1. Connect your tablet and start Side Screen on both devices
+1. Connect your tablet and start TetherSpan on both devices
 2. Arrange your Mac and tablet side by side on a desk
 3. Open a recognizable app window (e.g., Safari, Notes) and position it half on each screen
 4. Take a photo or use a screen capture tool that captures both devices
@@ -74,14 +74,14 @@ This guide describes how to capture each screenshot used in the README. Placehol
 
 **What to capture (Option A — Display Preferences):**
 - macOS System Settings > Displays, showing the virtual display arrangement
-- The virtual display created by Side Screen should be visible alongside your main display
+- The virtual display created by TetherSpan should be visible alongside your main display
 
 **What to capture (Option B — Window Drag):**
 - A Mac screenshot showing a window mid-drag onto the virtual display area
 
 **How to capture:**
 1. Open **System Settings > Displays** (or **System Preferences > Displays** on older macOS)
-2. Ensure Side Screen is running and the virtual display is visible in the arrangement
+2. Ensure TetherSpan is running and the virtual display is visible in the arrangement
 3. Take a screenshot with `Cmd + Shift + 4`, then select the Displays area
 4. Crop to show just the relevant portion
 5. Resize to 700px wide
@@ -130,11 +130,11 @@ This guide describes how to capture each screenshot used in the README. Placehol
 | **Format** | PNG |
 
 **What to capture:**
-- The Side Screen macOS settings window (frosted glass / vibrancy UI)
+- The TetherSpan macOS settings window (frosted glass / vibrancy UI)
 - All settings should be visible: resolution, frame rate, bitrate, quality, gaming mode toggle
 
 **How to capture:**
-1. Click the Side Screen menu bar icon to open settings
+1. Click the TetherSpan menu bar icon to open settings
 2. Use `Cmd + Shift + 4`, then press `Space` to capture just the window
 3. This gives you a clean window capture with shadow
 4. Resize to ~380px wide
@@ -160,7 +160,7 @@ This guide describes how to capture each screenshot used in the README. Placehol
 - Show all configurable options visible in one view
 
 **How to capture:**
-1. Open the Side Screen app on Android
+1. Open the TetherSpan app on Android
 2. Navigate to the settings screen
 3. Take a screenshot on the device (`Power + Volume Down`)
 4. Transfer to Mac via `adb pull /sdcard/Pictures/Screenshots/<file> .`

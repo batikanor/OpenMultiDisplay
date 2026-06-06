@@ -1,6 +1,6 @@
 # Logo & Icon Guide
 
-Hướng dẫn tạo logo cho Side Screen.
+Hướng dẫn tạo logo cho TetherSpan.
 
 ---
 
@@ -8,10 +8,10 @@ Hướng dẫn tạo logo cho Side Screen.
 
 | File | Kích thước | Format | Dùng ở đâu |
 |------|------------|--------|------------|
-| `sidescreen-icon.png` | 512x512 | PNG (transparent) | macOS app icon, Android icon |
-| `sidescreen-icon@2x.png` | 1024x1024 | PNG (transparent) | Retina displays |
-| `sidescreen-logo.svg` | Vector | SVG | Website, scalable usage |
-| `sidescreen-logo-dark.svg` | Vector | SVG | Dark mode variant |
+| `tetherspan-icon.png` | 512x512 | PNG (transparent) | macOS app icon, Android icon |
+| `tetherspan-icon@2x.png` | 1024x1024 | PNG (transparent) | Retina displays |
+| `tetherspan-logo.svg` | Vector | SVG | Website, scalable usage |
+| `tetherspan-logo-dark.svg` | Vector | SVG | Dark mode variant |
 
 ---
 
@@ -55,9 +55,9 @@ Chữ S cách điệu với gradient
 ## Style Guide
 
 **Colors:**
-- Primary: #007AFF (Apple Blue)
-- Secondary: #5856D6 (Purple)
-- Gradient: Blue → Purple
+- Primary: #00B8A9 (TetherSpan Teal)
+- Secondary: #FF9F3F (Amber)
+- Gradient: Blue → Amber
 - Background: Transparent hoặc White
 
 **Shape:**
@@ -96,7 +96,7 @@ Nếu muốn nhanh, dùng SF Symbols:
 
 1. Mở SF Symbols app
 2. Tìm "display" hoặc "rectangle"
-3. Export với màu #007AFF
+3. Export với màu #00B8A9
 4. Thêm vào rounded square background
 
 ---
@@ -104,7 +104,7 @@ Nếu muốn nhanh, dùng SF Symbols:
 ## Sau khi tạo xong
 
 1. Đặt files vào thư mục này
-2. Copy `sidescreen-icon.png` sang:
+2. Copy `tetherspan-icon.png` sang:
    - `website/assets/icon.png` (resize 128x128)
    - `MacHost/Resources/` (nếu cần)
    - `AndroidClient/app/src/main/res/mipmap-xxxhdpi/` (resize theo density)

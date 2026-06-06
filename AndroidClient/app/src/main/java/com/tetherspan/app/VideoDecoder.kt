@@ -1,4 +1,4 @@
-package com.sidescreen.app
+package com.tetherspan.app
 
 import android.media.MediaCodec
 import android.media.MediaCodecList

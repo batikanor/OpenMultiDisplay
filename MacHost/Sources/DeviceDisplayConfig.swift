@@ -16,6 +16,11 @@ struct DeviceDisplayConfig: Codable, Sendable {
     var rotation: Int?
     var positionX: Int?
     var positionY: Int?
+
+    var resolutionLabel: String? {
+        guard let width, let height else { return nil }
+        return "\(width)x\(height)"
+    }
 }
 
 struct DeviceDisplaySpec: Sendable {
@@ -65,21 +70,64 @@ enum DeviceDisplayConfigStore {
     }
 
     static var configURL: URL {
-        let dir = URL(fileURLWithPath: NSHomeDirectory())
+        let newDir = URL(fileURLWithPath: NSHomeDirectory())
+            .appendingPathComponent(".tetherspan", isDirectory: true)
+        let newURL = newDir.appendingPathComponent("devices.json")
+        let legacyURL = URL(fileURLWithPath: NSHomeDirectory())
             .appendingPathComponent(".sidescreen-multi", isDirectory: true)
-        return dir.appendingPathComponent("devices.json")
+            .appendingPathComponent("devices.json")
+
+        if !FileManager.default.fileExists(atPath: newURL.path),
+           FileManager.default.fileExists(atPath: legacyURL.path) {
+            do {
+                try FileManager.default.createDirectory(
+                    at: newDir,
+                    withIntermediateDirectories: true
+                )
+                try FileManager.default.copyItem(at: legacyURL, to: newURL)
+                debugLog("Migrated legacy device config to \(newURL.path)")
+            } catch {
+                debugLog("Failed to migrate \(legacyURL.path): \(error.localizedDescription)")
+            }
+        }
+
+        return newURL
     }
 
     static func load() -> [String: DeviceDisplayConfig] {
-        let url = configURL
+        load(from: configURL)
+    }
+
+    static func load(from url: URL, logErrors: Bool = true) -> [String: DeviceDisplayConfig] {
         guard let data = try? Data(contentsOf: url) else { return [:] }
 
         do {
             return try JSONDecoder().decode(ConfigFile.self, from: data).devices
         } catch {
-            debugLog("Failed to parse \(url.path): \(error.localizedDescription)")
+            if logErrors {
+                debugLog("Failed to parse \(url.path): \(error.localizedDescription)")
+            }
             return [:]
         }
+    }
+
+    static func save(_ configs: [String: DeviceDisplayConfig]) throws {
+        try save(configs, to: configURL)
+    }
+
+    static func save(_ configs: [String: DeviceDisplayConfig], to url: URL) throws {
+        try FileManager.default.createDirectory(
+            at: url.deletingLastPathComponent(),
+            withIntermediateDirectories: true
+        )
+        let data = try JSONEncoder.prettySorted.encode(ConfigFile(devices: configs))
+        try data.write(to: url, options: .atomic)
+    }
+
+    static func save(_ config: DeviceDisplayConfig, for serial: String) throws {
+        var configs = load()
+        configs[serial] = config
+        try save(configs)
     }
 
     static func writeSampleIfMissing(for devices: [USBDeviceInfo], settings: DisplaySettings) {
@@ -98,8 +146,7 @@ enum DeviceDisplayConfigStore {
                 defaults[device.serial] = fallback
             }
 
-            let data = try JSONEncoder.prettySorted.encode(ConfigFile(devices: defaults))
-            try data.write(to: url, options: .atomic)
+            try save(defaults, to: url)
             debugLog("Created per-device display config at \(url.path)")
         } catch {
             debugLog("Failed to create \(url.path): \(error.localizedDescription)")
@@ -136,7 +183,7 @@ enum DeviceDisplayConfigStore {
         )
     }
 
-    private static func defaultConfig(for device: USBDeviceInfo, index: Int, settings: DisplaySettings) -> DeviceDisplayConfig {
+    static func defaultConfig(for device: USBDeviceInfo, index: Int, settings: DisplaySettings) -> DeviceDisplayConfig {
         let model = (device.model ?? "").uppercased()
 
         if model.contains("SM_T870") || model.contains("GTS7") {

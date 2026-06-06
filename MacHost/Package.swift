@@ -2,18 +2,18 @@
 import PackageDescription
 
 let package = Package(
-    name: "SideScreen",
+    name: "TetherSpan",
     platforms: [
         .macOS(.v14)  // Required for CGVirtualDisplay API
     ],
     products: [
         .executable(
-            name: "SideScreen",
-            targets: ["SideScreen"])
+            name: "TetherSpan",
+            targets: ["TetherSpan"])
     ],
     targets: [
         .executableTarget(
-            name: "SideScreen",
+            name: "TetherSpan",
             dependencies: [],
             path: "Sources",
             cSettings: [
@@ -23,9 +23,9 @@ let package = Package(
                 .unsafeFlags(["-Xcc", "-fmodule-map-file=Sources/module.modulemap"])
             ]),
         .testTarget(
-            name: "SideScreenTests",
-            dependencies: ["SideScreen"],
-            path: "Tests/SideScreenTests",
+            name: "TetherSpanTests",
+            dependencies: ["TetherSpan"],
+            path: "Tests/TetherSpanTests",
             cSettings: [
                 .unsafeFlags(["-I", "Sources"])
             ],

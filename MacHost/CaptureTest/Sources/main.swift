@@ -9,7 +9,7 @@ app.setActivationPolicy(.accessory)
 
 let processInfo = ProcessInfo.processInfo
 print("========================================")
-print("  SideScreen Capture API Test")
+print("  TetherSpan Capture API Test")
 print("========================================")
 print("macOS version: \(processInfo.operatingSystemVersionString)")
 print("")

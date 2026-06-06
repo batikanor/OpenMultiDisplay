@@ -4,31 +4,28 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 
-echo "Starting SideScreen Multi..."
+echo "Starting TetherSpan..."
 
 # Kill any existing instance
-pkill -f SideScreen 2>/dev/null || true
+pkill -f TetherSpan 2>/dev/null || true
 sleep 0.3
 
 # Check if app bundle exists
-if [ -d "$ROOT_DIR/SideScreen Multi.app" ]; then
-    echo "  Opening SideScreen Multi.app..."
-    open "$ROOT_DIR/SideScreen Multi.app"
-elif [ -d "$ROOT_DIR/SideScreen.app" ]; then
-    echo "  Opening SideScreen.app..."
-    open "$ROOT_DIR/SideScreen.app"
-elif [ -f "$ROOT_DIR/MacHost/.build/release/SideScreen" ]; then
+if [ -d "$ROOT_DIR/TetherSpan.app" ]; then
+    echo "  Opening TetherSpan.app..."
+    open "$ROOT_DIR/TetherSpan.app"
+elif [ -f "$ROOT_DIR/MacHost/.build/release/TetherSpan" ]; then
     echo "  Running release binary..."
-    "$ROOT_DIR/MacHost/.build/release/SideScreen" &
-elif [ -f "$ROOT_DIR/MacHost/.build/debug/SideScreen" ]; then
+    "$ROOT_DIR/MacHost/.build/release/TetherSpan" &
+elif [ -f "$ROOT_DIR/MacHost/.build/debug/TetherSpan" ]; then
     echo "  Running debug binary..."
-    "$ROOT_DIR/MacHost/.build/debug/SideScreen" &
+    "$ROOT_DIR/MacHost/.build/debug/TetherSpan" &
 else
     echo "❌ No build found. Building now..."
     "$SCRIPT_DIR/build_mac.sh"
     echo ""
-    echo "  Opening SideScreen Multi.app..."
-    open "$ROOT_DIR/SideScreen Multi.app"
+    echo "  Opening TetherSpan.app..."
+    open "$ROOT_DIR/TetherSpan.app"
 fi
 
 echo ""
@@ -42,5 +39,5 @@ fi
 
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "Open 'SideScreen Multi' on Android and tap Connect"
+echo "Open 'TetherSpan' on Android and tap Connect"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"

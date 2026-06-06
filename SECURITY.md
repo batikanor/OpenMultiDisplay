@@ -1,6 +1,6 @@
 # Security Policy
 
-SideScreen Multi is early alpha software. Do not treat it as hardened or production audited.
+TetherSpan is early alpha software. Do not treat it as hardened or production audited.
 
 ## Supported Versions
 

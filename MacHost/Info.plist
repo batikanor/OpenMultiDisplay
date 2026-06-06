@@ -3,9 +3,9 @@
 <plist version="1.0">
 <dict>
     <key>CFBundleName</key>
-    <string>SideScreen Multi</string>
+    <string>TetherSpan</string>
     <key>CFBundleIdentifier</key>
-    <string>com.batikanor.sidescreenmulti</string>
+    <string>com.batikanor.tetherspan</string>
     <key>CFBundleVersion</key>
     <string>0.10.0</string>
     <key>CFBundleShortVersionString</key>
@@ -13,7 +13,7 @@
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>LSMinimumSystemVersion</key>
-    <string>13.0</string>
+    <string>14.0</string>
     <key>NSHighResolutionCapable</key>
     <true/>
 </dict>

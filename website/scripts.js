@@ -1,4 +1,4 @@
-// Side Screen Website JavaScript
+// TetherSpan Website JavaScript
 
 // ==================== Theme Toggle (runs early to prevent flash) ====================
 (function() {

@@ -1,6 +1,6 @@
 # Architecture
 
-SideScreen Multi currently uses the upstream SideScreen protocol and keeps the Swift module name `SideScreen` while the public app identity is `SideScreen Multi`.
+TetherSpan currently uses the upstream SideScreen wire protocol while the public app identity, Swift package, and Android package namespace are branded as TetherSpan.
 
 ## Wireless / Single-Display Pipeline
 
@@ -47,9 +47,8 @@ Each `DisplayPipeline` owns:
 - ADB reverse mappings are per physical device, so multiple devices can use the same Android-side port.
 - macOS needs separate virtual displays for true extended-desktop behavior.
 - Touch input must map back to the owning virtual display, not a global display.
-- Per-device display profiles are keyed by ADB serial and loaded from `~/.sidescreen-multi/devices.json`.
+- Per-device display profiles are keyed by ADB serial and loaded from `~/.tetherspan/devices.json`.
 
 ## Open Questions
 
-- Whether the Android USB UI should expose a device profile or stay zero-config.
 - How to handle two active touch sources at the same time.

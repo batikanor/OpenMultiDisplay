@@ -1,5 +1,5 @@
 import XCTest
-@testable import SideScreen
+@testable import TetherSpan
 
 final class PlaceholderTests: XCTestCase {
     func testPlaceholder() {
