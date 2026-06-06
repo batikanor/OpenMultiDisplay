@@ -12,7 +12,7 @@ jobs:
   build-mac:
     runs-on: macos-14
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Read version
         id: version
@@ -101,7 +101,7 @@ jobs:
           rm -rf dmg-content
 
       - name: Upload DMG
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: macos-dmg
           path: "*.dmg"
@@ -109,14 +109,14 @@ jobs:
   build-android:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Read version
         id: version
         run: echo "version=$(cat VERSION)" >> $GITHUB_OUTPUT
 
       - name: Set up JDK 17
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           java-version: '17'
           distribution: 'temurin'
@@ -139,7 +139,7 @@ jobs:
           cp AndroidClient/app/build/outputs/apk/release/app-release.apk "OpenMultiDisplay-${VERSION}-android.apk"
 
       - name: Upload APK
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: android-apk
           path: "*.apk"
@@ -148,14 +148,14 @@ jobs:
     needs: [build-mac, build-android]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Read version
         id: version
         run: echo "version=$(cat VERSION)" >> $GITHUB_OUTPUT
 
       - name: Download all artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           path: artifacts
 
@@ -176,7 +176,7 @@ jobs:
           } >> $GITHUB_OUTPUT
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           name: "OpenMultiDisplay v${{ steps.version.outputs.version }}"
           body: |
