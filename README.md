@@ -49,8 +49,9 @@ cd AndroidClient
 
 Android phones and tablets need the OpenMultiDisplay receiver APK installed before
 they can connect. The macOS app includes an **Android Receiver** panel that shows
-whether an APK is available, reveals it in Finder, and can install it to
-authorized USB devices with ADB.
+whether an APK is available, reveals it in Finder, tracks receiver install and
+running state for each authorized USB device, and can install missing or stale
+receivers before launching them with ADB.
 
 For release users, download the macOS DMG and Android APK from the same release.
 For local development, build the APK with:

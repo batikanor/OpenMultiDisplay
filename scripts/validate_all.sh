@@ -50,7 +50,7 @@ if command -v ktlint >/dev/null 2>&1; then
 else
   tmpdir="$(mktemp -d)"
   trap 'rm -rf "$tmpdir"' EXIT
-  curl -sSLo "$tmpdir/ktlint" https://github.com/pinterest/ktlint/releases/download/1.1.1/ktlint
+  curl -fL --retry 3 --retry-delay 2 -o "$tmpdir/ktlint" https://github.com/pinterest/ktlint/releases/download/1.1.1/ktlint
   chmod +x "$tmpdir/ktlint"
   "$tmpdir/ktlint" "app/src/main/java/**/*.kt" "app/src/test/java/**/*.kt"
 fi

@@ -978,11 +978,25 @@ struct StatusRow: View {
 struct AndroidReceiverSection: View {
     @ObservedObject var settings: DisplaySettings
     @State private var packageInfo = AndroidReceiverPackageManager.currentPackageInfo()
-    @State private var installMessage = ""
-    @State private var isInstalling = false
+    @State private var deviceStatuses: [AndroidReceiverDeviceStatus] = []
+    @State private var statusMessage = ""
+    @State private var isRefreshingDeviceStatus = false
+    @State private var isPreparingDevices = false
+
+    private var expectedVersionName: String? {
+        AndroidReceiverPackageManager.currentReceiverVersionName()
+    }
 
     private var deviceCount: Int {
         settings.usbDeviceInfos.count
+    }
+
+    private var installedDeviceCount: Int {
+        deviceStatuses.filter(\.isInstalled).count
+    }
+
+    private var runningDeviceCount: Int {
+        deviceStatuses.filter(\.isRunning).count
     }
 
     var body: some View {
@@ -1024,16 +1038,31 @@ struct AndroidReceiverSection: View {
                             color: deviceCount == 0 ? .orange : AppTheme.success,
                             hint: "Devices must appear in adb devices as authorized before the Mac can install the receiver."
                         )
+
+                        if deviceCount > 0 {
+                            Text("\(installedDeviceCount)/\(deviceCount) installed - \(runningDeviceCount) running")
+                                .font(.system(size: 10, weight: .medium))
+                                .foregroundColor(.secondary)
+                        }
                     }
                 }
 
+                deviceStatusList
+
                 HStack(spacing: 8) {
-                    Button(action: refreshPackage) {
-                        Image(systemName: "arrow.clockwise")
+                    Button(action: refreshAll) {
+                        if isRefreshingDeviceStatus {
+                            ProgressView()
+                                .controlSize(.small)
+                                .scaleEffect(0.65)
+                        } else {
+                            Image(systemName: "arrow.clockwise")
+                        }
                     }
                     .buttonStyle(.bordered)
                     .controlSize(.small)
-                    .help("Refresh APK availability")
+                    .disabled(isRefreshingDeviceStatus || isPreparingDevices)
+                    .help("Refresh APK and Android receiver status")
 
                     Button(action: revealPackage) {
                         HStack(spacing: 5) {
@@ -1045,37 +1074,91 @@ struct AndroidReceiverSection: View {
                     .controlSize(.small)
                     .disabled(packageInfo == nil)
 
-                    Button(action: installPackage) {
+                    Button(action: prepareAndLaunchDevices) {
                         HStack(spacing: 5) {
-                            if isInstalling {
+                            if isPreparingDevices {
                                 ProgressView()
                                     .controlSize(.small)
                                     .scaleEffect(0.65)
                             } else {
-                                Image(systemName: "square.and.arrow.down")
+                                Image(systemName: "play.rectangle")
                             }
-                            Text(isInstalling ? "Installing" : "Install to USB Devices")
+                            Text(isPreparingDevices ? "Preparing" : "Install Missing & Run")
                         }
                     }
                     .buttonStyle(.borderedProminent)
                     .controlSize(.small)
                     .tint(AppTheme.receiver)
-                    .disabled(packageInfo == nil || deviceCount == 0 || isInstalling)
+                    .disabled(packageInfo == nil || deviceCount == 0 || isRefreshingDeviceStatus || isPreparingDevices)
                 }
 
-                if !installMessage.isEmpty {
-                    Text(installMessage)
+                if !statusMessage.isEmpty {
+                    Text(statusMessage)
                         .font(.system(size: 10))
-                        .foregroundColor(installMessage.hasPrefix("Installed") ? AppTheme.success : .orange)
+                        .foregroundColor(messageColor)
                         .textSelection(.enabled)
                 }
             }
-            .onAppear(perform: refreshPackage)
+            .onAppear(perform: refreshAll)
+            .onChange(of: settings.usbDeviceInfos) { _, _ in
+                refreshDeviceStatuses()
+            }
         }
     }
 
-    private func refreshPackage() {
+    @ViewBuilder
+    private var deviceStatusList: some View {
+        if deviceCount == 0 {
+            Text("No authorized Android devices detected over ADB.")
+                .font(.system(size: 11))
+                .foregroundColor(.secondary)
+        } else if isRefreshingDeviceStatus && deviceStatuses.isEmpty {
+            HStack(spacing: 8) {
+                ProgressView()
+                    .controlSize(.small)
+                Text("Checking connected receiver apps...")
+                    .font(.system(size: 11))
+                    .foregroundColor(.secondary)
+            }
+        } else if deviceStatuses.isEmpty {
+            Text("Receiver status has not been checked for these devices yet.")
+                .font(.system(size: 11))
+                .foregroundColor(.secondary)
+        } else {
+            VStack(spacing: 8) {
+                ForEach(deviceStatuses) { status in
+                    AndroidReceiverDeviceStatusRow(
+                        status: status,
+                        expectedVersionName: expectedVersionName
+                    )
+                }
+            }
+        }
+    }
+
+    private var messageColor: Color {
+        if statusMessage.hasPrefix("Ready") || statusMessage.hasPrefix("Status refreshed") {
+            return AppTheme.success
+        }
+        return .orange
+    }
+
+    private func refreshAll() {
         packageInfo = AndroidReceiverPackageManager.currentPackageInfo()
+        refreshDeviceStatuses()
+    }
+
+    private func refreshDeviceStatuses() {
+        let devices = settings.usbDeviceInfos
+        isRefreshingDeviceStatus = true
+        Task {
+            let result = await AndroidReceiverPackageManager.receiverStatuses(for: devices)
+            await MainActor.run {
+                isRefreshingDeviceStatus = false
+                deviceStatuses = result.statuses
+                statusMessage = statusMessage(for: result)
+            }
+        }
     }
 
     private func revealPackage() {
@@ -1083,24 +1166,39 @@ struct AndroidReceiverSection: View {
         AndroidReceiverPackageManager.reveal(packageInfo)
     }
 
-    private func installPackage() {
+    private func prepareAndLaunchDevices() {
         guard let packageInfo else { return }
-        isInstalling = true
-        installMessage = ""
+        isPreparingDevices = true
+        statusMessage = ""
         let devices = settings.usbDeviceInfos
         Task {
-            let result = await AndroidReceiverPackageManager.installToAuthorizedUSBDevices(
+            let result = await AndroidReceiverPackageManager.prepareAndLaunchReceiverOnAuthorizedUSBDevices(
                 apkURL: packageInfo.url,
-                devices: devices
+                devices: devices,
+                expectedVersionName: expectedVersionName
             )
             await MainActor.run {
-                isInstalling = false
-                installMessage = message(for: result)
+                isPreparingDevices = false
+                deviceStatuses = result.statuses
+                statusMessage = message(for: result)
             }
         }
     }
 
-    private func message(for result: AndroidReceiverInstallResult) -> String {
+    private func statusMessage(for result: AndroidReceiverStatusQueryResult) -> String {
+        if result.adbMissing {
+            return "ADB is missing. Install Android platform-tools."
+        }
+        if result.noDevices {
+            return "No authorized USB devices found."
+        }
+        if result.statuses.isEmpty {
+            return ""
+        }
+        return "Status refreshed for \(result.statuses.count) device(s)."
+    }
+
+    private func message(for result: AndroidReceiverPrepareResult) -> String {
         if result.apkMissing {
             return "Receiver APK is missing."
         }
@@ -1111,20 +1209,131 @@ struct AndroidReceiverSection: View {
             return "No authorized USB devices found."
         }
         if result.succeeded {
-            return "Installed on \(result.installedSerials.count) device(s)."
+            return "Ready: installed \(result.installedSerials.count), launched \(result.launchedSerials.count)."
         }
-        if !result.installedSerials.isEmpty {
-            return "Installed on \(result.installedSerials.count), failed on \(result.failures.count)."
+        if !result.launchedSerials.isEmpty {
+            return "Launched \(result.launchedSerials.count), failed \(result.failures.count)."
         }
         if let firstFailure = result.failures.first {
-            return "Install failed for \(shortSerial(firstFailure.serial)): \(firstFailure.output)"
+            return "Device action failed for \(shortSerial(firstFailure.serial)): \(firstFailure.output)"
         }
-        return "Install failed."
+        return "Device action failed."
     }
 
     private func shortSerial(_ serial: String) -> String {
         guard serial.count > 10 else { return serial }
         return "\(serial.prefix(5))...\(serial.suffix(4))"
+    }
+}
+
+@available(macOS 14.0, *)
+struct AndroidReceiverDeviceStatusRow: View {
+    let status: AndroidReceiverDeviceStatus
+    let expectedVersionName: String?
+
+    var body: some View {
+        HStack(spacing: 10) {
+            Image(systemName: status.isInstalled ? "checkmark.seal.fill" : "exclamationmark.triangle.fill")
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundColor(installColor)
+                .frame(width: 18)
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(status.device.model ?? "Android device")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundColor(.primary)
+                Text(status.device.serial)
+                    .font(.system(size: 10, design: .monospaced))
+                    .foregroundColor(.secondary)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+            }
+
+            Spacer(minLength: 8)
+
+            VStack(alignment: .trailing, spacing: 4) {
+                ReceiverStatusBadge(text: installText, color: installColor)
+                ReceiverStatusBadge(text: runningText, color: runningColor)
+            }
+        }
+        .padding(10)
+        .background {
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .fill(Color.black.opacity(0.10))
+        }
+        .overlay {
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .strokeBorder(Color.white.opacity(0.08), lineWidth: 1)
+        }
+    }
+
+    private var installText: String {
+        switch status.installState {
+        case .missing:
+            return "Missing"
+        case .unknown:
+            return "Unknown"
+        case .installed(let versionName, _):
+            guard let versionName, !versionName.isEmpty else {
+                return "Installed"
+            }
+            if let expectedVersionName, !expectedVersionName.isEmpty, versionName != expectedVersionName {
+                return "Update \(versionName)"
+            }
+            return "Installed \(versionName)"
+        }
+    }
+
+    private var installColor: Color {
+        switch status.installState {
+        case .missing:
+            return .orange
+        case .unknown:
+            return .secondary
+        case .installed(let versionName, _):
+            if let expectedVersionName, let versionName,
+               !expectedVersionName.isEmpty, versionName != expectedVersionName {
+                return .orange
+            }
+            return AppTheme.success
+        }
+    }
+
+    private var runningText: String {
+        if !status.isInstalled {
+            return "Not runnable"
+        }
+        return status.isRunning ? "Running" : "Closed"
+    }
+
+    private var runningColor: Color {
+        if !status.isInstalled {
+            return .secondary
+        }
+        return status.isRunning ? AppTheme.success : .secondary
+    }
+}
+
+@available(macOS 14.0, *)
+struct ReceiverStatusBadge: View {
+    let text: String
+    let color: Color
+
+    var body: some View {
+        Text(text)
+            .font(.system(size: 9, weight: .bold, design: .rounded))
+            .foregroundColor(color)
+            .lineLimit(1)
+            .minimumScaleFactor(0.8)
+            .padding(.horizontal, 7)
+            .padding(.vertical, 3)
+            .background {
+                Capsule()
+                    .fill(color.opacity(0.12))
+                    .overlay {
+                        Capsule().strokeBorder(color.opacity(0.30), lineWidth: 1)
+                    }
+            }
     }
 }
 
