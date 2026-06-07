@@ -45,6 +45,20 @@ cd AndroidClient
 ./gradlew testDebugUnitTest lintDebug assembleDebug
 ```
 
+## Android Receiver APK
+
+Android phones and tablets need the OpenMultiDisplay receiver APK installed before
+they can connect. The macOS app includes an **Android Receiver** panel that shows
+whether an APK is available, reveals it in Finder, and can install it to
+authorized USB devices with ADB.
+
+For release users, download the macOS DMG and Android APK from the same release.
+For local development, build the APK with:
+
+```bash
+./scripts/build_android.sh
+```
+
 ## Project Docs
 
 | Document | Purpose |

@@ -5,11 +5,13 @@ import SwiftUI
 
 @available(macOS 14.0, *)
 enum AppTheme {
-    static let primary = Color(red: 0.00, green: 0.72, blue: 0.66)
-    static let primaryDeep = Color(red: 0.02, green: 0.34, blue: 0.32)
-    static let accent = Color(red: 1.00, green: 0.64, blue: 0.25)
-    static let surface = Color(red: 0.05, green: 0.08, blue: 0.08)
-    static let surfaceRaised = Color(red: 0.08, green: 0.12, blue: 0.12)
+    static let primary = Color(red: 0.12, green: 0.56, blue: 0.96)
+    static let primaryDeep = Color(red: 0.04, green: 0.13, blue: 0.24)
+    static let accent = Color(red: 1.00, green: 0.53, blue: 0.22)
+    static let receiver = Color(red: 0.62, green: 0.38, blue: 0.92)
+    static let success = Color(red: 0.12, green: 0.72, blue: 0.42)
+    static let panelStroke = Color.white.opacity(0.10)
+    static let panelFill = Color.black.opacity(0.12)
 }
 
 // MARK: - Frosted GroupBox Component
@@ -22,29 +24,41 @@ struct FrostedGroupBox<Content: View, Trailing: View>: View {
     @ViewBuilder let trailing: Trailing
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack(spacing: 8) {
-                if let icon = icon {
-                    Image(systemName: icon)
-                        .font(.system(size: 13, weight: .semibold))
-                        .foregroundColor(AppTheme.primary)
+        HStack(alignment: .top, spacing: 12) {
+            RoundedRectangle(cornerRadius: 2, style: .continuous)
+                .fill(AppTheme.primary)
+                .frame(width: 3)
+
+            VStack(alignment: .leading, spacing: 12) {
+                HStack(spacing: 8) {
+                    if let icon = icon {
+                        Image(systemName: icon)
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundColor(AppTheme.primary)
+                    }
+                    Text(title)
+                        .font(.system(size: 12, weight: .semibold))
+                        .textCase(.uppercase)
+                        .foregroundColor(.primary.opacity(0.92))
+                    Spacer()
+                    trailing
                 }
-                Text(title)
-                    .font(.system(size: 13, weight: .semibold))
-                Spacer()
-                trailing
+                content
             }
-            content
         }
-        .padding(14)
+        .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background {
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .fill(.ultraThinMaterial)
+            RoundedRectangle(cornerRadius: 9, style: .continuous)
+                .fill(AppTheme.panelFill)
+                .background {
+                    RoundedRectangle(cornerRadius: 9, style: .continuous)
+                        .fill(.ultraThinMaterial)
+                }
         }
         .overlay {
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .strokeBorder(Color.primary.opacity(0.08), lineWidth: 1)
+            RoundedRectangle(cornerRadius: 9, style: .continuous)
+                .strokeBorder(AppTheme.panelStroke, lineWidth: 1)
         }
     }
 }
@@ -97,32 +111,33 @@ struct SettingsView: View {
                 .ignoresSafeArea()
 
             VStack(spacing: 0) {
-                // Header with frosted glass
-                HStack(spacing: 14) {
+                HStack(spacing: 16) {
                     ZStack {
-                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        RoundedRectangle(cornerRadius: 10, style: .continuous)
                             .fill(LinearGradient(
-                                colors: [AppTheme.primary, AppTheme.primaryDeep],
+                                colors: [AppTheme.primary, AppTheme.receiver, AppTheme.primaryDeep],
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing
                             ))
-                            .frame(width: 48, height: 48)
-                            .shadow(color: AppTheme.primary.opacity(0.3), radius: 8, y: 4)
+                            .frame(width: 56, height: 56)
+                            .shadow(color: AppTheme.primary.opacity(0.25), radius: 12, y: 6)
 
-                        Image(systemName: "rectangle.on.rectangle")
-                            .font(.system(size: 22, weight: .medium))
+                        Image(systemName: "rectangle.3.group")
+                            .font(.system(size: 23, weight: .semibold))
                             .foregroundColor(.white)
                     }
-                    .scaleEffect(headerHovered ? 1.05 : 1)
+                    .scaleEffect(headerHovered ? 1.03 : 1)
                     .animation(.spring(response: 0.3), value: headerHovered)
                     .onHover { headerHovered = $0 }
 
-                    VStack(alignment: .leading, spacing: 3) {
+                    VStack(alignment: .leading, spacing: 7) {
                         Text("OpenMultiDisplay")
-                            .font(.system(size: 20, weight: .bold, design: .rounded))
-                        Text("USB-tethered displays for Android devices")
-                            .font(.system(size: 12, weight: .medium))
-                            .foregroundColor(.secondary)
+                            .font(.system(size: 22, weight: .bold, design: .rounded))
+                        HStack(spacing: 6) {
+                            HeaderPill(text: "USB", color: AppTheme.primary)
+                            HeaderPill(text: "MULTI-DEVICE", color: AppTheme.receiver)
+                            HeaderPill(text: "ANDROID", color: AppTheme.accent)
+                        }
                     }
 
                     Spacer()
@@ -150,9 +165,15 @@ struct SettingsView: View {
                         Text("This will reset all settings to default values.")
                     }
                 }
-                .padding(.horizontal, 20)
-                .padding(.vertical, 18)
-                .background(.ultraThinMaterial)
+                .padding(.horizontal, 24)
+                .padding(.vertical, 20)
+                .background {
+                    Rectangle()
+                        .fill(.ultraThinMaterial)
+                        .overlay(alignment: .bottom) {
+                            Rectangle().fill(Color.white.opacity(0.06)).frame(height: 1)
+                        }
+                }
 
                 Rectangle()
                     .fill(Color.primary.opacity(0.06))
@@ -187,7 +208,9 @@ struct SettingsView: View {
                     .frame(height: 1)
 
                 ScrollView {
-                    VStack(alignment: .leading, spacing: 16) {
+                    VStack(alignment: .leading, spacing: 18) {
+                        AndroidReceiverSection(settings: settings)
+
                         // Display Configuration
                         FrostedGroupBox(title: "Display Configuration", icon: "display") {
                             VStack(alignment: .leading, spacing: 16) {
@@ -734,7 +757,7 @@ struct SettingsView: View {
                             }
                         }
                     }
-                    .padding(20)
+                    .padding(24)
                 }
 
                 // Footer
@@ -850,13 +873,13 @@ struct SettingsView: View {
                         .buttonStyle(.plain)
                         .help("Quit OpenMultiDisplay (Command-Q)")
                     }
-                    .padding(.horizontal, 20)
+                    .padding(.horizontal, 24)
                     .padding(.vertical, 14)
                     .background(.ultraThinMaterial)
                 }
             }
         }
-        .frame(width: 520, height: 820)
+        .frame(width: 620, height: 860)
     }
 
     /// Restart the app by launching a new instance and terminating current one
@@ -883,6 +906,27 @@ struct SettingsView: View {
 }
 
 // MARK: - Supporting Views
+
+@available(macOS 14.0, *)
+struct HeaderPill: View {
+    let text: String
+    let color: Color
+
+    var body: some View {
+        Text(text)
+            .font(.system(size: 9, weight: .bold, design: .rounded))
+            .foregroundColor(color)
+            .padding(.horizontal, 7)
+            .padding(.vertical, 3)
+            .background {
+                Capsule()
+                    .fill(color.opacity(0.13))
+                    .overlay {
+                        Capsule().strokeBorder(color.opacity(0.35), lineWidth: 1)
+                    }
+            }
+    }
+}
 
 @available(macOS 14.0, *)
 struct StatusRow: View {
@@ -927,6 +971,160 @@ struct StatusRow: View {
                     .foregroundColor(color)
             }
         }
+    }
+}
+
+@available(macOS 14.0, *)
+struct AndroidReceiverSection: View {
+    @ObservedObject var settings: DisplaySettings
+    @State private var packageInfo = AndroidReceiverPackageManager.currentPackageInfo()
+    @State private var installMessage = ""
+    @State private var isInstalling = false
+
+    private var deviceCount: Int {
+        settings.usbDeviceInfos.count
+    }
+
+    var body: some View {
+        FrostedGroupBox(title: "Android Receiver", icon: "apps.iphone") {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack(alignment: .top, spacing: 12) {
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 8, style: .continuous)
+                            .fill(AppTheme.receiver.opacity(0.16))
+                            .frame(width: 44, height: 44)
+                        Image(systemName: "arrow.down.app.fill")
+                            .font(.system(size: 20, weight: .semibold))
+                            .foregroundColor(AppTheme.receiver)
+                    }
+
+                    VStack(alignment: .leading, spacing: 6) {
+                        StatusRow(
+                            title: "Receiver APK",
+                            status: packageInfo == nil ? "Missing" : "Available",
+                            color: packageInfo == nil ? .red : AppTheme.success,
+                            hint: "The Android receiver app must be installed on each tablet or phone."
+                        )
+
+                        if let packageInfo {
+                            Text("\(packageInfo.source.rawValue) - \(packageInfo.fileName) - \(packageInfo.sizeDescription)")
+                                .font(.system(size: 10, design: .monospaced))
+                                .foregroundColor(.secondary)
+                                .lineLimit(1)
+                                .truncationMode(.middle)
+                        } else {
+                            Text("Run scripts/build_android.sh or download the Android APK from a release.")
+                                .font(.system(size: 10))
+                                .foregroundColor(.secondary)
+                        }
+
+                        StatusRow(
+                            title: "USB devices",
+                            status: deviceCount == 0 ? "None" : "\(deviceCount) authorized",
+                            color: deviceCount == 0 ? .orange : AppTheme.success,
+                            hint: "Devices must appear in adb devices as authorized before the Mac can install the receiver."
+                        )
+                    }
+                }
+
+                HStack(spacing: 8) {
+                    Button(action: refreshPackage) {
+                        Image(systemName: "arrow.clockwise")
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
+                    .help("Refresh APK availability")
+
+                    Button(action: revealPackage) {
+                        HStack(spacing: 5) {
+                            Image(systemName: "folder")
+                            Text("Reveal APK")
+                        }
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
+                    .disabled(packageInfo == nil)
+
+                    Button(action: installPackage) {
+                        HStack(spacing: 5) {
+                            if isInstalling {
+                                ProgressView()
+                                    .controlSize(.small)
+                                    .scaleEffect(0.65)
+                            } else {
+                                Image(systemName: "square.and.arrow.down")
+                            }
+                            Text(isInstalling ? "Installing" : "Install to USB Devices")
+                        }
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.small)
+                    .tint(AppTheme.receiver)
+                    .disabled(packageInfo == nil || deviceCount == 0 || isInstalling)
+                }
+
+                if !installMessage.isEmpty {
+                    Text(installMessage)
+                        .font(.system(size: 10))
+                        .foregroundColor(installMessage.hasPrefix("Installed") ? AppTheme.success : .orange)
+                        .textSelection(.enabled)
+                }
+            }
+            .onAppear(perform: refreshPackage)
+        }
+    }
+
+    private func refreshPackage() {
+        packageInfo = AndroidReceiverPackageManager.currentPackageInfo()
+    }
+
+    private func revealPackage() {
+        guard let packageInfo else { return }
+        AndroidReceiverPackageManager.reveal(packageInfo)
+    }
+
+    private func installPackage() {
+        guard let packageInfo else { return }
+        isInstalling = true
+        installMessage = ""
+        let devices = settings.usbDeviceInfos
+        Task {
+            let result = await AndroidReceiverPackageManager.installToAuthorizedUSBDevices(
+                apkURL: packageInfo.url,
+                devices: devices
+            )
+            await MainActor.run {
+                isInstalling = false
+                installMessage = message(for: result)
+            }
+        }
+    }
+
+    private func message(for result: AndroidReceiverInstallResult) -> String {
+        if result.apkMissing {
+            return "Receiver APK is missing."
+        }
+        if result.adbMissing {
+            return "ADB is missing. Install Android platform-tools."
+        }
+        if result.noDevices {
+            return "No authorized USB devices found."
+        }
+        if result.succeeded {
+            return "Installed on \(result.installedSerials.count) device(s)."
+        }
+        if !result.installedSerials.isEmpty {
+            return "Installed on \(result.installedSerials.count), failed on \(result.failures.count)."
+        }
+        if let firstFailure = result.failures.first {
+            return "Install failed for \(shortSerial(firstFailure.serial)): \(firstFailure.output)"
+        }
+        return "Install failed."
+    }
+
+    private func shortSerial(_ serial: String) -> String {
+        guard serial.count > 10 else { return serial }
+        return "\(serial.prefix(5))...\(serial.suffix(4))"
     }
 }
 
@@ -1676,7 +1874,7 @@ class DisplaySettings: ObservableObject {
 class SettingsWindowController: NSWindowController, NSWindowDelegate {
     convenience init(settings: DisplaySettings) {
         let window = ConstrainedWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 520, height: 820),
+            contentRect: NSRect(x: 0, y: 0, width: 620, height: 860),
             styleMask: [.titled, .closable, .miniaturizable],
             backing: .buffered,
             defer: false

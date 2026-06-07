@@ -331,7 +331,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             }
         } else {
             debugLog("Screen recording permission not granted yet")
-            CGRequestScreenCaptureAccess()
         }
 
         // Check Accessibility permission (required for touch/mouse injection)

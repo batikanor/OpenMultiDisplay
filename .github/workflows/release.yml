@@ -10,9 +10,16 @@ permissions:
 
 jobs:
   build-mac:
+    needs: build-android
     runs-on: macos-14
     steps:
       - uses: actions/checkout@v6
+
+      - name: Download Android APK for bundling
+        uses: actions/download-artifact@v8
+        with:
+          name: android-apk
+          path: bundled-android-apk
 
       - name: Read version
         id: version
@@ -45,6 +52,11 @@ jobs:
           # Copy icon if exists
           if [ -f "MacHost/Resources/AppIcon.icns" ]; then
             cp MacHost/Resources/AppIcon.icns "$APP_DIR/Contents/Resources/"
+          fi
+
+          if ls bundled-android-apk/*.apk >/dev/null 2>&1; then
+            mkdir -p "$APP_DIR/Contents/Resources/Android"
+            cp bundled-android-apk/*.apk "$APP_DIR/Contents/Resources/Android/OpenMultiDisplay-android.apk"
           fi
 
           cat > "$APP_DIR/Contents/Info.plist" << EOF

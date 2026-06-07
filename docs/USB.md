@@ -5,15 +5,18 @@ USB mode is the primary OpenMultiDisplay path. It lets multiple Android devices 
 ## Setup
 
 1. Enable Developer Options and USB debugging on each Android device.
-2. Connect each Android device to the Mac by USB.
-3. Confirm every device is listed as `device`, not `unauthorized`:
+2. Install the OpenMultiDisplay Android receiver APK on each device. The macOS
+   app's Android Receiver panel can reveal the APK and install it over USB when
+   ADB sees authorized devices.
+3. Connect each Android device to the Mac by USB.
+4. Confirm every device is listed as `device`, not `unauthorized`:
 
 ```bash
 adb devices -l
 ```
 
-4. Start the macOS host.
-5. Launch the Android receiver on each device and use the USB tab.
+5. Start the macOS host.
+6. Launch the Android receiver on each device and use the USB tab.
 
 ## Port Mapping
 
@@ -68,6 +71,7 @@ If every USB receiver disappears, the host stops the USB session and reports tha
 | Symptom | Check |
 | --- | --- |
 | Device does not appear | Run `adb devices -l`; reconnect USB; accept the USB debugging prompt on Android. |
+| Android receiver is missing | Use the desktop app's Android Receiver panel to reveal or install the APK. |
 | Android says USB connected but no image appears | Restart USB mode after confirming `adb reverse` was configured for that serial. |
 | Two devices show the same display | Make sure the host build is OpenMultiDisplay and not upstream SideScreen; USB mode should create one `DisplayPipeline` per serial. |
 | Wrong size or orientation | Edit the device profile in the app or in `~/.openmultidisplay/devices.json`, then restart USB mode. |
