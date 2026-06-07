@@ -4,6 +4,7 @@ set -e
 # Get absolute path to root directory
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+source "$ROOT_DIR/scripts/lib/signing.sh"
 
 # Read version
 VERSION=$(cat "$ROOT_DIR/VERSION" | tr -d '[:space:]')
@@ -126,9 +127,7 @@ cat > "$APP_DIR/Contents/Info.plist" << EOF
 </plist>
 EOF
 
-# Ad-hoc code sign to prevent Gatekeeper "damaged" error
-echo "Code signing (ad-hoc)..."
-codesign --force --deep --sign - --entitlements "$ROOT_DIR/MacHost/OpenMultiDisplay.entitlements" "$APP_DIR"
+openmultidisplay_sign_app "$APP_DIR" "$ROOT_DIR/MacHost/OpenMultiDisplay.entitlements"
 echo "  ✓ App signed"
 
 echo ""

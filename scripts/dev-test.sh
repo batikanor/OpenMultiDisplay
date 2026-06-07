@@ -3,6 +3,7 @@ set -e
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+source "$ROOT_DIR/scripts/lib/signing.sh"
 VERSION=$(cat "$ROOT_DIR/VERSION" | tr -d '[:space:]')
 APP_DIR="$ROOT_DIR/OpenMultiDisplay.app"
 
@@ -58,7 +59,7 @@ cat > "$APP_DIR/Contents/Info.plist" << EOF
 </plist>
 EOF
 
-codesign --force --deep --sign - --entitlements "$ROOT_DIR/MacHost/OpenMultiDisplay.entitlements" "$APP_DIR" 2>/dev/null
+openmultidisplay_sign_app "$APP_DIR" "$ROOT_DIR/MacHost/OpenMultiDisplay.entitlements" >/dev/null
 echo "  OK"
 
 # 3. Build Android

@@ -4,6 +4,7 @@ set -e
 # Navigate to project root (parent of scripts directory)
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+source "$ROOT_DIR/scripts/lib/signing.sh"
 cd "$ROOT_DIR"
 
 echo "Installing OpenMultiDisplay..."
@@ -89,6 +90,8 @@ cat > "$APP_DIR/Info.plist" << 'PLIST'
 PLIST
 
 echo "  ✓ macOS .app bundle created: $APP_NAME"
+openmultidisplay_sign_app "$APP_NAME" "$ROOT_DIR/MacHost/OpenMultiDisplay.entitlements"
+echo "  ✓ macOS .app bundle signed"
 echo ""
 
 # Build Android app
