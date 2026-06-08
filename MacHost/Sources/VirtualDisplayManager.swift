@@ -242,11 +242,12 @@ class VirtualDisplayManager {
     }
 
     /// Restore saved display position
-    func restoreDisplayPosition() {
+    @discardableResult
+    func restoreDisplayPosition() -> Bool {
         let defaults = UserDefaults.standard
         guard defaults.bool(forKey: "OpenMultiDisplay_hasPosition") else {
             print("📍 No saved display position found")
-            return
+            return false
         }
 
         let x = defaults.integer(forKey: "OpenMultiDisplay_positionX")
@@ -255,8 +256,33 @@ class VirtualDisplayManager {
         do {
             try setDisplayPosition(x: Int32(x), y: Int32(y))
             print("📍 Restored display position: (\(x), \(y))")
+            return true
         } catch {
             print("⚠️  Failed to restore display position: \(error)")
+            return false
+        }
+    }
+
+    func placeToRightOfDesktop(spacing: Int) {
+        guard let displayID else { return }
+
+        let origin = DisplayArrangement.fallbackOrigins(
+            existingDisplayBounds: DisplayArrangement.onlineDisplayBounds(excluding: [displayID]),
+            anchorDisplayBounds: DisplayArrangement.mainDisplayBounds(),
+            virtualDisplaySizes: [CGSize(
+                width: CGFloat(CGDisplayPixelsWide(displayID)),
+                height: CGFloat(CGDisplayPixelsHigh(displayID))
+            )],
+            spacing: spacing
+        ).first
+
+        guard let origin else { return }
+
+        do {
+            try setDisplayPosition(x: Int32(origin.x), y: Int32(origin.y))
+            print("📍 Display placed to the right of current desktop: (\(Int(origin.x)), \(Int(origin.y)))")
+        } catch {
+            print("⚠️  Failed to place display next to current desktop: \(error)")
         }
     }
 
@@ -267,16 +293,7 @@ class VirtualDisplayManager {
             return false
         }
 
-        var onlineDisplays = [CGDirectDisplayID](repeating: 0, count: 16)
-        var displayCount: UInt32 = 0
-        let err = CGGetOnlineDisplayList(16, &onlineDisplays, &displayCount)
-
-        guard err == .success else {
-            debugLog("verifyDisplayRegistered: CGGetOnlineDisplayList failed with \(err)")
-            return false
-        }
-
-        let onlineIDs = Array(onlineDisplays.prefix(Int(displayCount)))
+        let onlineIDs = DisplayArrangement.onlineDisplayIDs()
         let found = onlineIDs.contains(displayID)
         debugLog("verifyDisplayRegistered: displayID \(displayID) \(found ? "FOUND" : "NOT FOUND") in online displays \(onlineIDs)")
         return found

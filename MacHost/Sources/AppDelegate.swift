@@ -671,12 +671,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
             DeviceDisplayConfigStore.writeSampleIfMissing(for: devices, settings: settings)
             let savedConfigs = DeviceDisplayConfigStore.load()
-            let mainBounds = CGDisplayBounds(CGMainDisplayID())
-            let fallbackY = Int(mainBounds.minY)
-            var nextFallbackX = Int(mainBounds.maxX)
             let basePort = Int(settings.port)
             let spacing = HostRuntimeConstants.fallbackDisplaySpacing
-            var specs: [DeviceDisplaySpec] = []
+            var baseSpecs: [DeviceDisplaySpec] = []
 
             for (index, device) in devices.enumerated() {
                 let hostPortValue = basePort + index
@@ -695,9 +692,17 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                     settings: settings,
                     savedConfigs: savedConfigs
                 )
-                let positionedSpec = baseSpec.withFallbackPosition(x: nextFallbackX, y: fallbackY)
-                specs.append(positionedSpec)
-                nextFallbackX += positionedSpec.width + spacing
+                baseSpecs.append(baseSpec)
+            }
+
+            let fallbackOrigins = DisplayArrangement.fallbackOrigins(
+                existingDisplayBounds: DisplayArrangement.onlineDisplayBounds(),
+                anchorDisplayBounds: DisplayArrangement.mainDisplayBounds(),
+                virtualDisplaySizes: baseSpecs.map { CGSize(width: $0.width, height: $0.height) },
+                spacing: spacing
+            )
+            let specs = zip(baseSpecs, fallbackOrigins).map { spec, origin in
+                spec.withFallbackPosition(x: Int(origin.x), y: Int(origin.y))
             }
 
             let reverseOK = await setupADBReverse(for: specs)
@@ -824,7 +829,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 }
             }
 
-            virtualDisplayManager?.restoreDisplayPosition()
+            if !(virtualDisplayManager?.restoreDisplayPosition() ?? false) {
+                virtualDisplayManager?.placeToRightOfDesktop(spacing: HostRuntimeConstants.fallbackDisplaySpacing)
+            }
 
             // Verify display is registered in the system
             if let vdm = virtualDisplayManager {
